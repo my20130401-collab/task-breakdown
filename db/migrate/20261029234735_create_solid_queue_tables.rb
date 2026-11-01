@@ -1,5 +1,5 @@
 class CreateSolidQueueTables < ActiveRecord::Migration[8.1]
-def change
+  def change
     create_table :solid_queue_jobs do |t|
       t.string :queue_name, null: false
       t.string :class_name, null: false

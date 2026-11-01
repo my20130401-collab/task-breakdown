@@ -91,6 +91,5 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    url: <%= ENV["DATABASE_URL"] %> #追記　
-    prepared_statements: false #追記
-  # Solid Cache用DBは廃止し、インメモリ(memory_store)を使用するため cache: ブロックは削除済。
+    url: <%= ENV["DATABASE_URL"] %>
+    prepared_statements: false
