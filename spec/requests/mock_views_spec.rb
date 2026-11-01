@@ -47,21 +47,4 @@ RSpec.describe "画面モックの表示（横断検査）" do
 
     expect(offenders).to be_empty
   end
-
-  describe "S-3 の送信内容" do
-    before { get "/" }
-
-    it "分解中のタスク詳細へ status=decomposing を hidden で送る" do
-      hidden = mock_document.at_css("form input[type='hidden'][name='status']")
-
-      expect(hidden["value"]).to eq "decomposing"
-    end
-
-    it "期限の入力欄（datetime-local）に「期限（任意）」のラベルが付く" do
-      field = mock_document.at_css("form input[type='datetime-local']")
-
-      expect(mock_document.at_css("label[for='#{field['id']}']").text.strip).to eq "期限（任意）"
-      expect(field["required"]).to be_nil
-    end
-  end
 end

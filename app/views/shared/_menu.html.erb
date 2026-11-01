@@ -25,7 +25,7 @@
       <% if item[:href] %>
         <%# method（:delete 等）が指定されている場合は Turbo Method で送信（ログアウトや削除処理用） %>
         <%= link_to item[:label], item[:href], role: "menuitem", tabindex: -1,
-                    data: (item[:method] ? { turbo_method: item[:method] } : {}),
+                    data: (item[:data] || {}).merge(item[:method] ? { turbo_method: item[:method] } : {}),
                     class: item_class %>
       <% else %>
         <button type="button" role="menuitem" tabindex="-1" data-mock="noop" data-action="menu#closeAndFocus" class="<%= item_class %>"><%= item[:label] %></button>

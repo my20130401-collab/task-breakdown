@@ -1,8 +1,22 @@
 require "rails_helper"
 
 RSpec.describe "S-4 タスク詳細", :js do
+  let!(:user) do
+    User.create!(
+      name: "詳細テスター",
+      email_address: "detail_tester@example.com",
+      password: "password123",
+      terms_accepted_at: Time.current
+    )
+  end
+
   before do
     travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+    # ログインしておくことで、page.go_back で /tasks に戻っても弾かれないようにする
+    visit new_session_path
+    fill_in "メールアドレス", with: user.email_address
+    fill_in "パスワード", with: "password123"
+    click_on "ログイン"
   end
 
   def card(title)

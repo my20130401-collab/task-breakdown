@@ -2,7 +2,7 @@
 
 <div class="flex min-h-screen flex-col" data-controller="completed-filter">
   <%= render "mocks/content_header" do %>
-    <%= link_to my_tasks_mock_path, aria: { label: "マイタスクに戻る" },
+    <%= link_to tasks_path, aria: { label: "マイタスクに戻る" },
                 class: "flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-ink" do %>
       <%= render "shared/icon", name: :chevron_left, class: "h-4 w-4" %>マイタスク
     <% end %>
@@ -84,7 +84,7 @@
       <% end %>
       <%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
                                        body: "完了した手順は「完了済みを表示」で確認できます。",
-                                       action: { label: "マイタスクへ", href: my_tasks_mock_path },
+                                       action: { label: "マイタスクへ", href: tasks_path },
                                        data: { completed_filter_target: "empty" },
                                        hidden: !(@subtasks.any? && @subtasks.all? { it[:done] }) %>
     <% end %>

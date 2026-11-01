@@ -1,0 +1,36 @@
+<% content_for :title, "タスクを編集 | Tasklet" %>
+
+<div class="mx-auto w-full max-w-[640px] px-4 py-12">
+  <div class="mb-8">
+    <p class="text-[11px] font-semibold tracking-[0.12em] text-brand-dot">EDIT TASK</p>
+    <h1 class="mt-2 font-serif text-[32px] font-bold text-ink">タスクの編集</h1>
+  </div>
+
+  <%= form_with model: @task, class: "space-y-6" do |f| %>
+    <% if @task.errors.any? %>
+      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-600">
+        <ul class="list-disc pl-5 space-y-1">
+          <% @task.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :title, class: "block text-[13px] font-semibold text-ink" %>
+      <%= f.text_field :title, class: "mt-2 w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink focus:border-brand focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :due_at, class: "block text-[13px] font-semibold text-ink" %>
+      <%= f.datetime_local_field :due_at, value: @task.due_at&.strftime("%Y-%m-%dT%H:%M"),
+                                 class: "mt-2 w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[13px] text-ink focus:border-brand focus:outline-none" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4">
+      <%= f.submit "変更を保存する", class: "cursor-pointer rounded-lg bg-brand px-5 py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-hover" %>
+      <%= link_to "キャンセル", tasks_path, class: "text-[13px] text-muted hover:text-ink" %>
+    </div>
+  <% end %>
+</div>

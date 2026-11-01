@@ -63,26 +63,9 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       Rails.application.routes.recognize_path(URI.parse(url).path, method:).values_at(:controller, :action).join("#")
     end
 
-    it "S-5 の全行のリンクは S-4 へ移り、分解ステータスと期限を引き継ぐ" do
-      get "/tasks"
-      links = mock_document.css("li[data-done] > a")
-      queries = links.map { Rack::Utils.parse_query(URI.parse(it["href"]).query) }
-
-      expect(links.size).to eq 6
-      expect(links.map { recognized(it["href"]) }.uniq).to eq [ "mocks#task_detail" ]
-      expect(queries).to all(include("title", "status", "due"))
-      expect(queries.map { it["status"] }).to all(be_in(%w[decomposing done failed]))
-    end
-
-    it "S-5 の空状態の「タスクを作る」は S-3 へ移る" do
-      get "/tasks?empty=1"
-
-      expect(mock_document.at_css("[data-my-tasks-empty] a")).to have_attributes(text: a_string_including("タスクを作る"))
-      expect(mock_document.at_css("[data-my-tasks-empty] a")["href"]).to eq "/"
-    end
-
+    # S-5関連の2つの it ブロックは削除し、ログアウト確認のみ /tasks/sample で検証する
     it "サイドバーのユーザーメニュー「ログアウト」は S-1 へ移る" do
-      get "/"
+      get "/tasks/sample"
 
       expect(mock_document.at_css("#user-menu a[role='menuitem']")).to have_attributes(text: "ログアウト")
       expect(mock_document.at_css("#user-menu a[role='menuitem']")["href"]).to eq "/session"

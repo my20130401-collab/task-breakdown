@@ -8,7 +8,7 @@
 
   <nav class="mt-8 space-y-2">
     <%# current: その画面自身なら "page"、配下の画面（タスク詳細）なら "true" %>
-    <% [ [ "タスクを作る", :inbox, root_path, "new_task", %w[] ], [ "マイタスク", :calendar, my_tasks_mock_path, "my_tasks", %w[task_detail] ] ].each do |label, icon, path, page, children| %>
+    <% [ ["タスクを作る", :inbox, root_path, "new", %w[] ], ["マイタスク", :calendar, tasks_path, "index", %w[task_detail] ] ].each do |label, icon, path, page, children| %>
       <% current = if action_name == page then "page" elsif action_name.in?(children) then "true" end %>
       <%= link_to path, aria: { current: }, class: class_names("flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold",
                                                                current ? "bg-brand-soft text-brand" : "text-muted hover:bg-canvas") do %>

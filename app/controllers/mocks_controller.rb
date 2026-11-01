@@ -34,10 +34,28 @@ class MocksController < ApplicationController
   # S-1/S-2 の送信。保存・認証は行わず、ログイン後のホーム（S-3）へ移る。
   # POST で受けるので、入力値（パスワードを含む）が URL に残らない
   def signup_submit
+    user = User.first_or_create!(
+      email_address: "mock@example.com"
+    ) do |u|
+      u.name = "モックユーザー"
+      u.password = "password123"
+      u.terms_accepted_at = Time.current
+    end
+
+    start_new_session_for(user)
     redirect_to root_path
   end
 
   def login_submit
+    user = User.first_or_create!(
+      email_address: "mock@example.com"
+    ) do |u|
+      u.name = "モックユーザー"
+      u.password = "password123"
+      u.terms_accepted_at = Time.current
+    end
+
+    start_new_session_for(user)
     redirect_to root_path
   end
 

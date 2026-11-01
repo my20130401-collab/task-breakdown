@@ -54,11 +54,7 @@ RSpec.describe "画面モックのボタン（横断検査）" do
       expect(noop_labels("/tasks/sample?status=failed")).to eq %w[編集 再分解 削除 再分解する]
     end
 
-    it "S-5 は親タスクのメニュー（編集・削除）" do
-      expect(noop_labels("/tasks").each_slice(2).to_a.uniq).to eq [ %w[編集 削除] ]
-    end
-
-    %w[/ /login /signup /terms /privacy /tasks?empty=1].each do |path|
+    %w[/login /signup /terms /privacy].each do |path|
       it "#{path} には見た目のみのボタンが無い" do
         expect(noop_labels(path)).to be_empty
       end

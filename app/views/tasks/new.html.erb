@@ -1,0 +1,59 @@
+<% content_for :title, "タスクを作る | Tasklet" %>
+
+<div class="mx-auto flex max-w-[720px] flex-col items-center px-4 pt-[90px] text-center">
+  <span class="grid h-12 w-12 place-items-center rounded-xl bg-brand-soft text-brand">
+    <%= render "shared/icon", name: :sparkles, class: "h-5 w-5" %>
+  </span>
+  <p class="mt-5 text-[11px] font-semibold tracking-[0.12em] text-brand-dot">AI TASK ASSISTANT</p>
+  <h1 class="mt-4 font-serif text-[44px] font-bold tracking-tight">今日は何に取り組みますか？</h1>
+  <p class="mt-6 text-sm leading-relaxed text-muted">やりたいことをそのまま入力してください。<br>実行できるサイズのタスクに分解します。</p>
+
+  <%# バリデーションエラーがある場合のエラーメッセージ表示 %>
+  <% if @task.errors.any? %>
+    <div class="mt-6 w-full rounded-xl border border-red-200 bg-red-50 p-4 text-left text-sm text-red-600">
+      <ul class="list-inside list-disc space-y-1">
+        <% @task.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# タスク作成フォーム %>
+  <%= form_with model: @task,
+                data: { controller: "prompt", action: "keydown->prompt#submitOnShortcut" },
+                class: "mt-11 w-full rounded-2xl border border-line bg-white text-left shadow-float" do |form| %>
+    <%= form.text_area :title, rows: 4, required: true, maxlength: 200,
+                       placeholder: "例：来週の経営会議に向けて、新規事業の提案資料を作りたい（背景や制約も書けます）",
+                       aria: { label: "取り組みたいこと", describedby: "title-hint" },
+                       data: { prompt_target: "input", action: "input->prompt#validate" },
+                       class: "block w-full resize-none rounded-t-2xl border-0 px-6 pt-6 text-[15px] placeholder:text-subtle focus:ring-0 focus:outline-none" %>
+    <p id="title-hint" class="px-6 pb-3 text-right text-2xs text-subtle">200 文字まで</p>
+
+    <div class="flex items-center justify-between gap-4 border-t border-line px-5 py-2.5">
+      <div class="flex items-center gap-2">
+        <%= form.label :due_at, "期限（任意）", class: "text-[11px] font-semibold text-ink/80" %>
+        <%= form.datetime_local_field :due_at, value: nil, min: Time.current.strftime("%Y-%m-%dT%H:%M"), include_seconds: false,
+                                      class: "rounded-lg border border-line bg-white px-2.5 py-2 text-[13px] focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-soft" %>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-[11px] text-subtle">⌘ / Ctrl + Enter で送信</span>
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-3 text-[13px] font-semibold text-white hover:bg-brand-hover">
+          タスクを分解する
+          <%= render "shared/icon", name: :chevron_right, class: "h-3.5 w-3.5" %>
+        </button>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 入力例チップ %>
+  <div class="mt-6 flex flex-wrap items-center justify-center gap-2" data-controller="prompt-examples">
+    <span class="mr-1 text-2xs text-subtle">入力例</span>
+    <% Task::EXAMPLES.each do |example| %>
+      <button type="button" data-action="prompt-examples#fill" data-text="<%= example %>"
+              class="rounded-full border border-line bg-transparent px-3 py-2 text-2xs text-ink/80 hover:bg-white">
+        <%= example %>
+      </button>
+    <% end %>
+  </div>
+</div>

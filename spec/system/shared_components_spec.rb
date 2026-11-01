@@ -23,7 +23,7 @@ RSpec.describe "共通部品", :js do
     let(:trigger) { find("aside button[aria-haspopup='menu']") }
 
     before do
-      visit "/tasks"
+      visit "/tasks/sample"
     end
 
     it "開くと項目が画面内に見え、最初の項目にフォーカスが移る" do
@@ -68,29 +68,6 @@ RSpec.describe "共通部品", :js do
   end
 
   describe "完了フィルタ" do
-    it "S-5 でトグルすると全完了の親タスクが打ち消し線で現れ、戻すと隠れる" do
-      visit "/tasks"
-
-      toggle = find("header button[aria-pressed]")
-      expect(page).to have_no_text("経費精算の締め確認")
-      expect(page).to have_text("見積もり作成")
-
-      toggle.click
-      expect(toggle["aria-pressed"]).to eq "true"
-      expect(toggle.text).to eq "完了済みを隠す"
-      title = find("li[data-done='true'] p", text: "経費精算の締め確認")
-      expect(title).to be_visible
-      decoration = page.evaluate_script(<<~JS)
-        getComputedStyle(document.querySelector("li[data-done='true'] a p.font-serif")).textDecorationLine
-      JS
-      expect(decoration).to include("line-through")
-
-      toggle.click
-      expect(toggle["aria-pressed"]).to eq "false"
-      expect(toggle.text).to eq "完了済みを表示"
-      expect(page).to have_no_text("経費精算の締め確認")
-    end
-
     it "S-4 でも完了済みのサブタスクが初期非表示で、トグルで現れる" do
       visit "/tasks/sample"
 

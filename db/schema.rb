@@ -145,6 +145,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_015932) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "tasks", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "parent_id"
+    t.string "title", limit: 200, null: false
+    t.text "description"
+    t.integer "kind", default: 0, null: false
+    t.datetime "due_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "completed_at"
+    t.integer "position", default: 0, null: false
+    t.integer "source", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_tasks_on_parent_id"
+    t.index ["user_id", "status", "due_at"], name: "index_tasks_on_user_id_and_status_and_due_at"
+    t.index ["user_id"], name: "index_tasks_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name", limit: 50, null: false
     t.string "email_address", null: false
@@ -162,4 +180,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_015932) do
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_recurring_tasks", column: "task_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "tasks", "tasks", column: "parent_id"
+  add_foreign_key "tasks", "users"
 end

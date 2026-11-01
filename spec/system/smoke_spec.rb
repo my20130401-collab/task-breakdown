@@ -2,6 +2,16 @@ require "rails_helper"
 
 # JavaScript（Stimulus）を動かす system spec の基盤が、ローカルと CI の両方で動くことを確かめる
 RSpec.describe "JS system spec の基盤", :js do
+  let(:user) { create(:user) }
+
+  before do
+    # 本実装の root_path は認証が必要なため、ログインしてから各テストを実行する
+    visit new_session_path
+    fill_in "メールアドレス", with: user.email_address
+    fill_in "パスワード", with: "password123"
+    click_on "ログイン"
+  end
+
   it "入力例チップを押すと入力欄に例文が入る" do
     visit root_path
 

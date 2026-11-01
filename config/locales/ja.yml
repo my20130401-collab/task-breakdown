@@ -1,4 +1,5 @@
 ja:
+  # モデルのカラム名（フォームのラベルやバリデーションエラー用）
   activerecord:
     attributes:
       user:
@@ -7,4 +8,23 @@ ja:
         password: "パスワード"
         password_confirmation: "パスワード（確認）"
         terms_accepted_at: "利用規約への同意"
-        
+      task:
+        title: "タスク名"
+        due_at: "期限"
+    errors:
+      models:
+        task:
+          attributes:
+            due_at:
+              cannot_be_in_the_past: "は現在より前の日時を設定できません"
+
+  # 画面通知メッセージ（コントローラの flash メッセージ用）
+  tasks:
+    create:
+      success: "タスクを作成しました"
+      failure: "タスクの作成に失敗しました"
+    update:
+      success: "タスクを更新しました"
+      failure: "タスクの更新に失敗しました"
+    destroy:
+      success: "タスクを削除しました"
