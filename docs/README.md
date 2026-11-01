@@ -14,6 +14,6 @@
 |---|---|
 | [dev/setup.md](dev/setup.md) | 開発環境の構築（必要なもの・起動・テスト・トラブル対処） |
 | [dev/first-contribution.md](dev/first-contribution.md) | 開発の進め方（Issue → ブランチ → 実装 → Pull Request） |
-| [docs/deploy.md](docs/deploy.md) | デプロイ・本番環境の運用手順 |
+| [deploy.md](deploy.md) | デプロイ・本番環境の運用手順 |
 
 > 現在のアプリは **画面モック**（固定データで画面を再現した状態）です。ロジックは各ドキュメントの仕様に沿って今後実装します。
