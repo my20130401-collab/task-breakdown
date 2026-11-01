@@ -56,6 +56,12 @@ RSpec.describe Task do
         task = build(:task, user: user, due_at: nil)
         expect(task).to be_valid
       end
+
+      it "現在の時刻と同じ分を指定した場合は有効であること" do
+        # 現在時刻と同じ分を指定した場合は、過去日ではないため合格
+        task = build(:task, user: user, due_at: Time.current.beginning_of_minute)
+        expect(task).to be_valid
+      end
     end
 
     # ユーザーとの紐付けチェック（AC-4 / 認可の基盤）
@@ -172,6 +178,31 @@ RSpec.describe Task do
         sub1.uncomplete!
         expect(parent_task.reload).to be_todo
         expect(parent_task.completed_at).to be_nil
+      end
+    end
+
+    context "未完了のサブタスクを削除した場合" do
+      it "残りのサブタスクがすべて完了済みであれば親タスクが自動的に done になること" do
+        # 完了1件・未完了1件の子タスクを作成（この時点では親は todo）
+        sub1 = create(:task, user: user, parent: parent_task, status: :done)
+        sub2 = create(:task, user: user, parent: parent_task, status: :todo)
+
+        expect(parent_task.reload).to be_todo
+
+        # 未完了の sub2 を削除すると、残りが done だけになるため親も連動して done に変わる
+        sub2.destroy
+        expect(parent_task.reload).to be_done
+      end
+    end
+
+    context "サブタスクが削除されて0件になった場合" do
+      it "親タスクのステータスは変化しないこと" do
+        # 子タスクを作成
+        sub = create(:task, user: user, parent: parent_task, status: :todo)
+
+        # 唯一の子タスクを削除して子が0件になっても、親のステータスは勝手に変わらず維持される
+        sub.destroy
+        expect(parent_task.reload).to be_todo
       end
     end
   end
