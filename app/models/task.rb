@@ -20,8 +20,9 @@ class Task < ApplicationRecord
   validates :title, presence: true, length: { maximum: 200 }
   validate :due_at_cannot_be_in_the_past, on: :create
 
-  # コールバック（サブタスク保存後に親タスクの状態を同期）
+  # コールバック（サブタスク保存・削除後に親タスクの状態を同期）
   after_save :sync_parent_status, if: :parent_id?
+  after_destroy :sync_parent_status, if: :parent_id?
 
   # スコープ
   # 親タスクのみ取得（parent_id が nil）
@@ -54,7 +55,7 @@ class Task < ApplicationRecord
   def due_at_cannot_be_in_the_past
     return if due_at.blank?
 
-    if due_at < Time.current
+    if due_at < Time.current.beginning_of_minute
       errors.add(:due_at, :cannot_be_in_the_past)
     end
   end
@@ -63,7 +64,10 @@ class Task < ApplicationRecord
   def sync_parent_status
     return unless parent
 
-    if parent.children.all?(&:done?)
+    children = parent.children.reload
+    return if children.empty?
+
+    if children.all?(&:done?)
       parent.update!(status: :done, completed_at: Time.current) unless parent.done?
     else
       parent.update!(status: :todo, completed_at: nil) unless parent.todo?
