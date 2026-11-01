@@ -31,9 +31,9 @@ class MocksController < ApplicationController
     render layout: "auth"
   end
 
-# S-1/S-2 の送信。保存・認証は行わず、ログイン後のホーム（S-3）へ移る。
-# POST で受けるので、入力値（パスワードを含む）が URL に残らない
-def signup_submit
+  # S-1/S-2 の送信。保存・認証は行わず、ログイン後のホーム（S-3）へ移る。
+  # POST で受けるので、入力値（パスワードを含む）が URL に残らない
+  def signup_submit
     user = User.first_or_create!(
       email_address: "mock@example.com"
     ) do |u|

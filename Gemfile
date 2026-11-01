@@ -65,5 +65,4 @@ group :test do
   gem "webmock"
   gem "simplecov", require: false
 end
-
 gem "bcrypt", "~> 3.1"
