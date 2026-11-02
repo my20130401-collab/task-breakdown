@@ -10,6 +10,8 @@ class Task < ApplicationRecord
   belongs_to :user
   belongs_to :parent, class_name: "Task", optional: true
   has_many :children, class_name: "Task", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent
+  # 親タスクが削除されたら、紐づくAI分解の履歴もまとめて削除する（親タスク 1 : 多 分解履歴）
+  has_many :decompositions, dependent: :destroy
 
   # 列挙型（Enum）
   enum :kind, { basic: 0, special: 1 }
