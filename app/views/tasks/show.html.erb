@@ -1,0 +1,70 @@
+<% content_for :title, "#{@task.title} | Tasklet" %>
+
+<div class="flex min-h-screen flex-col" data-controller="completed-filter">
+  <%= render "mocks/content_header" do %>
+    <%= link_to tasks_path, aria: { label: "マイタスクに戻る" },
+                class: "flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-ink" do %>
+      <%= render "shared/icon", name: :chevron_left, class: "h-4 w-4" %>マイタスク
+    <% end %>
+  <% end %>
+
+  <% status = :done %>
+  <% done = true %>
+  <% subtasks = @task.children %>
+
+  <%= tag.div class: "mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]",
+              data: { controller: class_names("subtasks", "date-tabs": done),
+                      action: "subtasks:added->date-tabs#showAll" } do %>
+    <div class="flex items-center justify-between">
+      <%= render "shared/decomposition_status", status: status %>
+      <%= render "shared/menu", id: "task-menu", label: "「#{@task.title}」のメニュー",
+                                items: [ { label: "編集", href: edit_task_path(@task) }, { label: "削除", danger: true } ] %>
+    </div>
+    <h1 class="mt-5 font-serif text-[40px] font-bold leading-[1.45] tracking-tight"><%= @task.title %></h1>
+    <p class="mt-4 text-[11px] text-muted">
+      AI が実行しやすい手順に分解しました。内容は自由に編集できます。
+    </p>
+
+    <div class="mt-6 flex items-center gap-8">
+      <p class="flex items-center gap-1.5 text-2xs text-muted" data-parent-due>
+        <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
+        <%= due_time_tag(@task.due_at) || "期限なし" %>
+      </p>
+      <div class="w-40" data-subtasks-target="progress">
+        <%= render "shared/task_progress", done: subtasks.count(&:done?), total: subtasks.size %>
+      </div>
+    </div>
+
+    <div class="mt-12 flex border-b border-line text-[11px] font-semibold" role="tablist" aria-label="期限の日付で絞り込む">
+      <button type="button" role="tab" id="date-tab-all" aria-selected="true" aria-controls="subtask-panel"
+              tabindex="0" data-due-key="all" data-date-tabs-target="tab"
+              data-action="date-tabs#select keydown->date-tabs#navigate"
+              class="-mb-px border-b-2 border-transparent px-4 py-3 text-muted not-aria-selected:hover:text-ink aria-selected:border-brand aria-selected:text-brand">すべて</button>
+    </div>
+
+    <%= tag.div id: "subtask-panel", role: "tabpanel", aria: { labelledby: "date-tab-all" },
+                data: { date_tabs_target: "panel" } do %>
+      <ol class="mt-4 space-y-2.5 empty:hidden" data-subtasks-target="list" data-date-tabs-target="list">
+        <% subtasks.each.with_index(1) do |subtask, number| %>
+          <%= render "mocks/subtask_card", subtask: subtask, number: format("%02d", number) %>
+        <% end %>
+      </ol>
+
+      <%= render "shared/empty_state", icon: :calendar, title: "この日のサブタスクはありません",
+                                       body: "ほかの日付か「すべて」のタブで確認できます。",
+                                       data: { date_tabs_target: "empty" }, hidden: true %>
+
+      <%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
+                                       body: "完了した手順は「完了済みを表示」で確認できます。",
+                                       action: { label: "マイタスクへ", href: tasks_path },
+                                       data: { completed_filter_target: "empty" },
+                                       hidden: !(subtasks.any? && subtasks.all?(&:done?)) %>
+    <% end %>
+
+    <button type="button" data-action="subtasks#add"
+            class="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-dashed py-4 text-[11px] font-semibold text-muted hover:bg-white">
+      <%= render "shared/icon", name: :plus, class: "h-3.5 w-3.5" %>
+      タスクを追加
+    </button>
+  <% end %>
+</div>

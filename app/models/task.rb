@@ -19,6 +19,7 @@ class Task < ApplicationRecord
   # バリデーション
   validates :title, presence: true, length: { maximum: 200 }
   validate :due_at_cannot_be_in_the_past, on: :create
+  validate :parent_must_belong_to_same_user, if: -> { parent_id.present? }
 
   # コールバック（サブタスク保存・削除後に親タスクの状態を同期）
   after_save :sync_parent_status, if: :parent_id?
@@ -71,6 +72,13 @@ class Task < ApplicationRecord
       parent.update!(status: :done, completed_at: Time.current) unless parent.done?
     else
       parent.update!(status: :todo, completed_at: nil) unless parent.todo?
+    end
+  end
+
+  # 親子タスクの所有者一致を検証
+  def parent_must_belong_to_same_user
+    if parent.present? && parent.user_id != user_id
+      errors.add(:parent_id, "は同じユーザーのタスクを指定してください")
     end
   end
 end
