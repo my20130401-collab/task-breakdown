@@ -27,7 +27,7 @@ RSpec.describe "タスク機能", :js do
       click_on "タスクを分解する"
 
       # 詳細モック画面へ遷移し、完了メッセージが表示されること
-      expect(page).to have_current_path(task_detail_mock_path)
+      expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
     end
 
@@ -39,7 +39,7 @@ RSpec.describe "タスク機能", :js do
       textarea.send_keys([ :control, :enter ])
 
       # 詳細モック画面へ遷移し、完了メッセージが表示されること
-      expect(page).to have_current_path(task_detail_mock_path)
+      expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
     end
   end
