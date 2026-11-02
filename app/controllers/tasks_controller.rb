@@ -2,7 +2,7 @@ class TasksController < ApplicationController
   include DueDateHelper
 
   # 編集・更新・削除の前に、対象のタスクをあらかじめ探しておく共通処理
-  before_action :set_task, only: %i[edit update destroy]
+  before_action :set_task, only: %i[show edit update destroy]
 
   # マイタスク一覧（S-5）の表示
   def index
@@ -18,12 +18,15 @@ class TasksController < ApplicationController
     @task = Task.new
   end
 
+  def show
+  end
+
   # タスク作成の保存処理
   def create
     @task = Current.user.tasks.build(task_params)
 
     if @task.save
-      redirect_to task_detail_mock_path, notice: t(".success")
+      redirect_to @task, notice: t(".success")
     else
       flash.now[:alert] = t(".failure")
       render :new, status: :unprocessable_entity
@@ -58,6 +61,6 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    params.expect(task: [ :title, :due_at ])
+    params.expect(task: [ :title, :due_at, :parent_id ])
   end
 end

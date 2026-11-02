@@ -75,6 +75,24 @@ RSpec.describe Task do
     end
   end
 
+    # 親子タスクの所有者一致チェック（Issue #81）
+    describe "parent_id" do
+      let(:user) { create(:user) }
+      let(:user_b) { create(:user) }
+      let(:parent_task) { create(:task, user: user) }
+
+      it "親タスクと子タスクの所有者が一致する場合は有効であること" do
+        child_task = build(:task, user: user, parent: parent_task)
+        expect(child_task).to be_valid
+      end
+
+      it "親タスクと子タスクの所有者が一致しない場合は無効であること" do
+        child_task = build(:task, user: user_b, parent: parent_task)
+        expect(child_task).not_to be_valid
+        expect(child_task.errors[:parent_id]).to include("は同じユーザーのタスクを指定してください")
+      end
+    end
+
   # ----------------------------------------------------------------
   # 2. アソシエーション（関連付け）のテスト
   # ----------------------------------------------------------------

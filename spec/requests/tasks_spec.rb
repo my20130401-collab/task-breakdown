@@ -66,7 +66,7 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
           }
         end
 
-        it "タスクが作成され、ログイン中ユーザーに紐づいて詳細モックへリダイレクトされる" do
+        it "タスクが作成され、ログイン中ユーザーに紐づいて詳細画面へリダイレクトされる" do
           expect do
             post tasks_path, params: valid_params
           end.to change(user.tasks, :count).by(1)
@@ -74,7 +74,7 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
           created_task = user.tasks.last
           expect(created_task.title).to eq("新規事業の提案資料を作成する")
 
-          expect(response).to redirect_to(task_detail_mock_path)
+          expect(response).to redirect_to(task_path(created_task))
           expect(flash[:notice]).to eq(I18n.t("tasks.create.success"))
         end
       end
@@ -155,6 +155,45 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("自分の親タスク")
         expect(response.body).not_to include("他人の親タスク")
+      end
+    end
+  end
+
+  # ------------------------------------------------------------
+  # 追加. タスク詳細画面の表示（GET /tasks/:id）
+  # ------------------------------------------------------------
+  describe "GET /tasks/:id" do
+    let!(:task) { user.tasks.create!(title: "自分のタスク", due_at: 1.day.from_now) }
+
+    context "未ログインの場合" do
+      it "ログイン画面へリダイレクトされる" do
+        get task_path(task)
+        expect(response).to redirect_to(new_session_path)
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before do
+        post session_path, params: { email_address: user.email_address, password: "password123" }
+      end
+
+      it "200 OK で自分のタスク詳細画面が表示される" do
+        get task_path(task)
+        expect(response).to have_http_status(:ok)
+      end
+
+      # 今回のIssue要件：他人のタスクアクセス制御
+      it "他人のタスクの詳細画面を開こうとすると 404 Not Found になる" do
+        other_user = User.create!(
+          name: "他ユーザー",
+          email_address: "other_show@example.com",
+          password: "password123",
+          terms_accepted_at: Time.current
+        )
+        other_task = other_user.tasks.create!(title: "他人のタスク")
+
+        get task_path(other_task)
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
