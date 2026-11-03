@@ -17,7 +17,7 @@ Rails.application.routes.draw do
   resources :tasks do
    # タブ切り替え（非同期通信）用エンドポイント
    scope module: :tasks do
-     resources :subtasks, only: %i[index]
+     resources :subtasks, only: %i[index create edit update destroy]
    end
  end
 
