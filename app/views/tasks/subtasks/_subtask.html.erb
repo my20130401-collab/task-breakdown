@@ -12,6 +12,10 @@
             <span class="rounded-md bg-surface-dark px-2 py-0.5 text-[10px] font-bold text-muted">基本</span>
           <% end %>
         </div>
+        
+        <% if subtask.description.present? %>
+          <p class="mt-1 text-[11px] text-muted line-clamp-2"><%= subtask.description %></p>
+        <% end %>
       </div>
       <div class="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted">
         <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
