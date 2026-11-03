@@ -24,7 +24,7 @@ module Llm
         req["Content-Type"] = "application/json"
         req.body = JSON.generate({
           model: @model,
-          messages: [{ role: "user", content: prompt }]
+          messages: [ { role: "user", content: prompt } ]
         })
       end
 
