@@ -29,8 +29,13 @@ class Task < ApplicationRecord
   # 親タスクのみ取得（parent_id が nil）
   scope :roots, -> { where(parent_id: nil) }
 
+  @@ -25,6 +25,10 @@
   # 期限の近い順（未設定は末尾）
   scope :ordered_by_due, -> { order(Arel.sql("due_at ASC NULLS LAST"), :id) }
+
+  # 日付タブ絞り込み用のスコープ（AC-3）
+  scope :due_today, -> { where(due_at: Time.zone.now.all_day) }
+  scope :due_tomorrow, -> { where(due_at: Time.zone.tomorrow.all_day) }
 
   # サブタスクの進捗（完了数/全体数）を返す（サブタスクがない場合は nil）
   def progress
