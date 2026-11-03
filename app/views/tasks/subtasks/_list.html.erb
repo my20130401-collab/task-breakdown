@@ -1,5 +1,5 @@
 <div id="subtasks_list" class="mt-4">
-  <ol class="space-y-2.5 empty:hidden">
+  <ol id="subtasks-list" class="space-y-2.5 empty:hidden">
     <% subtasks.each.with_index(1) do |subtask, index| %>
       <%= render "tasks/subtasks/subtask", subtask: subtask, number: format("%02d", index) %>
     <% end %>

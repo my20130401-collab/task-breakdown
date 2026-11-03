@@ -1,0 +1,6 @@
+<%# ID "subtasks-list" の末尾にフォームを追加する %>
+<%= turbo_stream.append "subtasks-list" do %>
+  <%= turbo_frame_tag @subtask, class: "block" do %>
+    <%= render "form", task: @task, subtask: @subtask %>
+  <% end %>
+<% end %>
