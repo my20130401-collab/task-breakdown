@@ -14,7 +14,12 @@ Rails.application.routes.draw do
 
   # 本実装（タスク機能）
   root "tasks#new"
-  resources :tasks
+  resources :tasks do
+   # タブ切り替え（非同期通信）用エンドポイント
+   scope module: :tasks do
+     resources :subtasks, only: %i[index]
+   end
+ end
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

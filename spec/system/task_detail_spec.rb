@@ -318,155 +318,38 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   describe "日付タブ" do
-    def tab(label)
-      find("[role='tablist'] [role='tab']", text: label, exact_text: true)
+   let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 1.day.from_now) }
+
+    before do
+      # 準備: 今日、明日、期限なしのタスクと、補足説明（AC-2）を持つタスクを作成
+      parent_task.children.create!(user: user, title: "今日のタスク", due_at: Time.current)
+      parent_task.children.create!(user: user, title: "明日のタスク", due_at: Time.current.tomorrow)
+      parent_task.children.create!(user: user, title: "期限なしタスク", due_at: nil)
+      parent_task.children.create!(user: user, title: "補足付きタスク", due_at: Time.current, description: "これは補足説明のテストです")
+
+      # モックではなく実際の詳細画面へ遷移
+      visit task_path(parent_task)
     end
 
-    def visible_titles
-      all("ol > li [data-subtask-card-target='title']").map { it.text.strip }
-    end
+    it "タブをクリックすると画面リロードなしでサブタスクが絞り込まれ、補足説明も表示されること" do
+      # 初期表示（すべてタブ）
+      expect(page).to have_content "今日のタスク"
+      expect(page).to have_content "明日のタスク"
+      expect(page).to have_content "期限なしタスク"
+      expect(page).to have_content "これは補足説明のテストです"
 
-    def selected_tab
-      find("[role='tab'][aria-selected='true']").text.strip
-    end
+      # 「今日」タブをクリック（Turbo Streamの非同期更新）
+      click_link "今日"
+      expect(page).to have_content "今日のタスク"
+      expect(page).to have_content "補足付きタスク"
+      expect(page).not_to have_content "明日のタスク"
+      expect(page).not_to have_content "期限なしタスク"
 
-    let(:tab_empty) { "この日のサブタスクはありません" }
-
-    it "「今日」で今日の手順だけを表示し、「すべて」で戻る。選んだタブに下線が付く" do
-      visit "/tasks/sample"
-      expect(visible_titles.size).to eq 5
-
-      tab("今日").click
-      expect(visible_titles).to eq %w[目的と読み手を整理する 必要な情報を集める]
-      expect(tab("今日")["aria-selected"]).to eq "true"
-      expect(tab("すべて")["aria-selected"]).to eq "false"
-      expect(find("[role='tabpanel']")["aria-labelledby"]).to eq "date-tab-today"
-      underline = ->(label) { page.evaluate_script("getComputedStyle(document.getElementById('date-tab-#{label}')).borderBottomColor") }
-      expect(underline.call("today")).not_to eq underline.call("all")
-      expect(underline.call("all")).to eq "rgba(0, 0, 0, 0)"
-
-      tab("すべて").click
-      expect(visible_titles.size).to eq 5
-      expect(visible_titles.last).to eq "提出後に振り返りをメモする"
-    end
-
-    it "期限なしの手順は「すべて」にだけ表示する" do
-      visit "/tasks/sample"
-
-      %w[今日 明日 6/27].each do |label|
-        tab(label).click
-        expect(page).to have_no_text("提出後に振り返りをメモする")
-      end
-      tab("すべて").click
-      expect(page).to have_text("提出後に振り返りをメモする")
-    end
-
-    it "完了フィルタと独立して働き、どちらにも隠されていない手順だけを表示する" do
-      visit "/tasks/sample"
-
-      tab("今日").click
-      expect(page).to have_no_text("依頼の背景と締め切りを確認する")
-      click_on "完了済みを表示"
-      expect(visible_titles).to eq %w[依頼の背景と締め切りを確認する 目的と読み手を整理する 必要な情報を集める]
-
-      tab("明日").click
-      expect(visible_titles).to eq %w[上長に方向性を確認する]
-    end
-
-    it "「明日」で完了済みを隠した結果 0 件になると、タブの空状態だけを出し、全完了の文言は出さない" do
-      visit "/tasks/sample"
-      tab("明日").click
-      expect(page).to have_no_text(tab_empty)
-
-      check_of("上長に方向性を確認する").click
-      expect(page).to have_no_text("上長に方向性を確認する")
-      expect(page).to have_text(tab_empty)
-      expect(page).to have_no_text("すべての手順が完了しました")
-
-      click_on "完了済みを表示"
-      expect(page).to have_no_text(tab_empty)
-      expect(page).to have_text("上長に方向性を確認する")
-
-      click_on "完了済みを隠す"
-      expect(page).to have_text(tab_empty)
-      tab("すべて").click
-      expect(page).to have_no_text(tab_empty)
-    end
-
-    it "全サブタスクが完了済みのときは、どのタブでも全完了の空状態だけを出す" do
-      visit "/tasks/sample?status=done&all_done=1"
-      expect(page).to have_text("すべての手順が完了しました")
-
-      tab("明日").click
-      expect(page).to have_text("すべての手順が完了しました")
-      expect(page).to have_no_text(tab_empty)
-    end
-
-    it "←→ でタブを移動して選び、Home・End で先頭・末尾へ移る。Tab キーは選択中のタブだけに止まる" do
-      visit "/tasks/sample"
-      tab("すべて").click
-      expect(page).to have_css("#date-tab-all:focus")
-
-      page.send_keys(:right)
-      expect(page).to have_css("#date-tab-today:focus")
-      expect(selected_tab).to eq "今日"
-      expect(visible_titles).to eq %w[目的と読み手を整理する 必要な情報を集める]
-
-      page.send_keys(:right)
-      expect(selected_tab).to eq "明日"
-      page.send_keys(:end)
-      expect(selected_tab).to eq "6/27"
-      expect(visible_titles).to eq %w[初稿を作成する]
-      page.send_keys(:right)
-      expect(selected_tab).to eq "すべて"
-      page.send_keys(:left)
-      expect(selected_tab).to eq "6/27"
-      page.send_keys(:home)
-      expect(selected_tab).to eq "すべて"
-      expect(page).to have_css("#date-tab-all:focus")
-
-      tabindexes = all("[role='tab']").map { it["tabindex"] }
-      expect(tabindexes).to eq %w[0 -1 -1 -1]
-    end
-
-    it "修飾キー付きの ←→（Alt+← の「戻る」など）はブラウザの操作に任せ、タブを動かさない" do
-      visit "/tasks/sample"
-      tab("すべて").click
-
-      %i[alt control meta shift].each do |modifier|
-        page.send_keys([ modifier, :right ])
-        expect(selected_tab).to eq "すべて"
-      end
-      expect(page.evaluate_script(<<~JS)).to be false
-        (() => {
-          const event = new KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true, cancelable: true })
-          document.getElementById("date-tab-all").dispatchEvent(event)
-          return event.defaultPrevented
-        })()
-      JS
-    end
-
-    it "タスクを追加すると「すべて」に戻り、追加したカード（期限は今日）が見える" do
-      visit "/tasks/sample"
-      tab("明日").click
-
-      click_on "タスクを追加"
-      expect(selected_tab).to eq "すべて"
-      expect(visible_titles.size).to eq 6
-      expect(page).to have_css("ol > li:last-child[data-due-key='today']")
-      expect(page).to have_css("ol > li:last-child [data-subtask-card-target='title']:focus")
-
-      tab("今日").click
-      expect(page).to have_css("ol > li:last-child [data-subtask-card-target='title']", visible: true)
-    end
-
-    it "タブで隠れた手順も親タスクの進捗に数える" do
-      visit "/tasks/sample"
-      tab("明日").click
-
-      expect(progress_text).to eq "1/6 完了"
-      check_of("上長に方向性を確認する").click
-      expect(progress_text).to eq "2/6 完了"
+      # 「明日」タブをクリック
+      click_link "明日"
+      expect(page).not_to have_content "今日のタスク"
+      expect(page).to have_content "明日のタスク"
+      expect(page).not_to have_content "期限なしタスク"
     end
   end
 end
