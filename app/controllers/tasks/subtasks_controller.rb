@@ -5,13 +5,13 @@ module Tasks
     def index
       # タブごとの絞り込みロジック
       @subtasks = case params[:filter]
-                  when "today"
+      when "today"
                     @task.children.due_today.ordered_by_due
-                  when "tomorrow"
+      when "tomorrow"
                     @task.children.due_tomorrow.ordered_by_due
-                  when "all", nil
+      when "all", nil
                     @task.children.ordered_by_due
-                  else
+      else
                     # M/D などの特定日付の絞り込み
                     target_date = Date.parse(params[:filter]) rescue nil
                     if target_date
@@ -19,7 +19,7 @@ module Tasks
                     else
                       @task.children.ordered_by_due
                     end
-                  end
+      end
     end
 
     private
