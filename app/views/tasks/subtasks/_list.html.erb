@@ -1,0 +1,11 @@
+<div id="subtasks_list" class="mt-4">
+  <ol class="space-y-2.5 empty:hidden">
+    <% subtasks.each.with_index(1) do |subtask, index| %>
+      <%= render "tasks/subtasks/subtask", subtask: subtask, number: format("%02d", index) %>
+    <% end %>
+  </ol>
+
+  <%= render "shared/empty_state", icon: :calendar, title: "該当するサブタスクはありません",
+             body: "ほかの日付か「すべて」のタブで確認できます。",
+             hidden: subtasks.any? %>
+</div>
