@@ -19,6 +19,8 @@ class TasksController < ApplicationController
   end
 
   def show
+    # AC-1: DBに保存されたサブタスクを期限の近い順（未設定は末尾）に取得
+    @subtasks = @task.children.ordered_by_due
   end
 
   # タスク作成の保存処理
