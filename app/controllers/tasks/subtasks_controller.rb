@@ -1,7 +1,7 @@
 module Tasks
   class SubtasksController < ApplicationController
     before_action :set_parent_task
-    before_action :set_subtask, only: %i[edit update destroy]
+    before_action :set_subtask, only: %i[show edit update destroy]
 
     def index
       # タブごとの絞り込みロジック
@@ -33,8 +33,14 @@ module Tasks
     def edit
     end
 
+    def show
+      # キャンセル時に元のパーシャルを再レンダリングするため
+      @number = @task.children.ordered_by_due.pluck(:id).index(@subtask.id).to_i + 1
+    end
+
     def update
       if @subtask.update(subtask_params)
+        @number = @task.children.ordered_by_due.pluck(:id).index(@subtask.id).to_i + 1
         # update.turbo_stream.erb がレンダリングされます
       else
         render :edit, status: :unprocessable_entity
