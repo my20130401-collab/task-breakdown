@@ -64,10 +64,10 @@ class TaskDecomposer
                 type: "object",
                 properties: {
                   title: { type: "string", description: "サブタスク名（〜する）" },
-                  description: { type: ["string", "null"], description: "補足説明" },
+                  description: { type: [ "string", "null" ], description: "補足説明" },
                   kind: { type: "string", enum: %w[basic special], description: "basic: 通常, special: 待ち発生" },
-                  estimated_minutes: { type: ["integer", "null"], description: "目安時間（分）" },
-                  due_at: { type: ["string", "null"], description: "期限日時（ISO 8601形式）" }
+                  estimated_minutes: { type: [ "integer", "null" ], description: "目安時間（分）" },
+                  due_at: { type: [ "string", "null" ], description: "期限日時（ISO 8601形式）" }
                 },
                 required: %w[title description kind estimated_minutes due_at],
                 additionalProperties: false
