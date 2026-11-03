@@ -42,8 +42,7 @@
                                        body: "完了した手順は「完了済みを表示」で確認できます。",
                                        action: { label: "マイタスクへ", href: tasks_path },
                                        data: { completed_filter_target: "empty" },
-                                       hidden: !(subtasks.any? && subtasks.all?(&:done?)) %>
-    <% end %>
+                                       hidden: !(@subtasks.any? && @subtasks.all?(&:done?)) %>
 
     <button type="button" data-action="subtasks#add"
             class="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-dashed py-4 text-[11px] font-semibold text-muted hover:bg-white">
