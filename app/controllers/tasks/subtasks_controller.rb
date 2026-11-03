@@ -25,7 +25,7 @@ module Tasks
 
     def create
       # AC-1, AC-2: 空のサブタスクを作成し、直後にインライン編集状態にする
-      @subtask = @task.children.create!(title: "") 
+      @subtask = @task.children.create!(title: "")
       @number = @task.children.count
       # デフォルトで create.turbo_stream.erb がレンダリングされます
     end
