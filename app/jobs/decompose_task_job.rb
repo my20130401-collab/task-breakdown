@@ -19,7 +19,8 @@ class DecomposeTaskJob < ApplicationJob
     task = Task.find(task_id)
     decomposition = task.decompositions.where(status: :pending).order(created_at: :desc).first || task.decompositions.build
 
-    decomposer = TaskDecomposer.new(task: task, decomposition: decomposition)
+    # 頭に :: を付けてトップレベルの TaskDecomposer を確実に参照させる
+    decomposer = ::TaskDecomposer.new(task: task, decomposition: decomposition)
     success = decomposer.call
 
     if success
