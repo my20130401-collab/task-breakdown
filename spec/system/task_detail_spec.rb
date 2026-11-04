@@ -32,10 +32,9 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   def line_through?(title)
-    # Capybaraの find を使うことで、要素が現れるまで自動待機（Auto-wait）させる
-    # 該当のタイトルを持つ要素を探し、その computed style を取得する
-    element = find("ol [data-subtask-card-target='title']", text: title, exact_text: true)
-    page.evaluate_script("getComputedStyle(arguments[0]).textDecorationLine.includes('line-through')", element)
+    # exact_textでの検索はcontenteditableで見失うため、確実に取得できるcard(title)から辿る
+    title_el = card(title).find("[data-subtask-card-target='title']")
+    page.evaluate_script("getComputedStyle(arguments[0]).textDecorationLine.includes('line-through')", title_el)
   end
 
   describe "分解中からの自動遷移" do
@@ -500,17 +499,20 @@ RSpec.describe "S-4 タスク詳細", :js do
       # Turbo Streamの通信が被らないよう、1つずつ消えるのを確認しながらクリックする
       check_of("サブタスク1").click
       expect(page).to have_no_content("サブタスク1")
+      # 【追加】進捗が更新され、DOMの再構築が落ち着くのを待つ
+      expect(page).to have_css("[data-task-progress]", text: "1/3 完了")
 
       check_of("サブタスク2").click
       expect(page).to have_no_content("サブタスク2")
+      expect(page).to have_css("[data-task-progress]", text: "2/3 完了")
 
       check_of("サブタスク3").click
-      # 最後のサブタスクが非表示になるのを待機（この間にStimulusがEmpty Stateを表示状態にする）
       expect(page).to have_no_content("サブタスク3")
+      # 最後の進捗更新を確実に待つことで、Stimulus側のEmpty State表示処理完了を保証する
+      expect(page).to have_css("[data-task-progress]", text: "3/3 完了")
 
-      # 表示状態になるまで自動待機して検証
+      # visible: :all などの回避策なしに、純粋に可視化されることを検証する
       expect(page).to have_text("すべての手順が完了しました")
-      expect(progress_text).to eq "3/3 完了"
     end
   end
 end
