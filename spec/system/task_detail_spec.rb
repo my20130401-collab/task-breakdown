@@ -32,10 +32,10 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   def line_through?(title)
-    page.evaluate_script(<<~JS)
-      getComputedStyle(Array.from(document.querySelectorAll("ol [data-subtask-card-target='title']"))
-        .find((el) => el.textContent.trim() === #{title.to_json})).textDecorationLine.includes("line-through")
-    JS
+    # Capybaraの find を使うことで、要素が現れるまで自動待機（Auto-wait）させる
+    # 該当のタイトルを持つ要素を探し、その computed style を取得する
+    element = find("ol [data-subtask-card-target='title']", text: title, exact_text: true)
+    page.evaluate_script("getComputedStyle(arguments[0]).textDecorationLine.includes('line-through')", element)
   end
 
   describe "分解中からの自動遷移" do
@@ -479,15 +479,17 @@ RSpec.describe "S-4 タスク詳細", :js do
 
       click_on "完了済みを表示"
 
-      # card() ヘルパーの代わりに have_css で柔軟に待機・検証
+      # 完了済みのサブタスクが表示される（DOMが更新される）のを待機
       expect(page).to have_css("li[data-done='true']", text: "サブタスク2")
       expect(line_through?("サブタスク2")).to be true
       expect(check_of("サブタスク2")["aria-label"]).to eq "「サブタスク2」を未完了に戻す"
 
       check_of("サブタスク2").click
 
-      # 再度の非同期更新を待機
+      # 未完了に戻ったこと（DOMが更新される）のを待機
       expect(page).to have_css("li[data-done='false']", text: "サブタスク2")
+      # 打ち消し線が消えるのを待機 (evaluate_scriptの前に確実に状態が変わるのを待つ)
+      expect(page).not_to have_css("li[data-done='true']", text: "サブタスク2")
       expect(line_through?("サブタスク2")).to be false
       expect(progress_text).to eq "0/3 完了"
     end
@@ -503,6 +505,10 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_no_content("サブタスク2")
 
       check_of("サブタスク3").click
+      # 最後のサブタスクが非表示になるのを待機（この間にStimulusがEmpty Stateを表示状態にする）
+      expect(page).to have_no_content("サブタスク3")
+
+      # 表示状態になるまで自動待機して検証
       expect(page).to have_text("すべての手順が完了しました")
       expect(progress_text).to eq "3/3 完了"
     end
