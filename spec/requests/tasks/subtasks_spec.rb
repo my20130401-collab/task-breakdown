@@ -83,14 +83,14 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
       it "過去の日時を設定しようとした場合、更新されずにエラーを返すこと" do
         patch task_subtask_path(parent_task, subtask), params: { task: { due_at: 1.hour.ago.iso8601 } }, as: :turbo_stream
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.media_type).to eq Mime[:turbo_stream]
       end
 
       it "親タスクの期限を超える日時を設定しようとした場合、更新されずにエラーを返すこと" do
         patch task_subtask_path(parent_task, subtask), params: { task: { due_at: 2.days.from_now.iso8601 } }, as: :turbo_stream
-        
-        expect(response).to have_http_status(:unprocessable_entity)
+
+        expect(response).to have_http_status(:unprocessable_content)
         expect(response.media_type).to eq Mime[:turbo_stream]
       end
     end
