@@ -74,7 +74,7 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
           created_task = user.tasks.last
           expect(created_task.title).to eq("新規事業の提案資料を作成する")
 
-          expect(response).to redirect_to(task_detail_mock_path)
+          expect(response).to redirect_to(task_path(created_task))
           expect(flash[:notice]).to eq(I18n.t("tasks.create.success"))
         end
       end

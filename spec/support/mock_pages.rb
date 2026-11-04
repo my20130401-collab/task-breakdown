@@ -1,11 +1,7 @@
 # 横断検査（spec/requests/mock_*_spec.rb）で巡回する画面モックの URL と、検査用の HTML の読み方。
 module MockPages
-  # 全画面・全状態。S-4 は分解中・分解完了・分解失敗と全完了（S-5 は本実装へ移行したため除外）
+  # 全画面・全状態（S-4, S-5 は本実装へ移行したため除外）
   PATHS = %w[
-    /tasks/sample
-    /tasks/sample?status=decomposing
-    /tasks/sample?status=failed
-    /tasks/sample?all_done=1
     /signup
     /login
     /terms
