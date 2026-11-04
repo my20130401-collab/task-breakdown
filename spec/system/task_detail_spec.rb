@@ -466,33 +466,28 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(progress_text).to eq "0/3 完了"
       expect(page).to have_content("サブタスク1")
 
-      # サブタスク1のチェックボタン（完了にする）をクリック
       check_of("サブタスク1").click
-
-      # 画面から非表示になり、進捗が更新されることを確認
+      # 非同期更新を待機する
       expect(page).to have_no_content("サブタスク1")
       expect(progress_text).to eq "1/3 完了"
     end
 
     it "AC-2, AC-3: 「完了済みを表示」で打ち消し線付きで再表示され、チェックを外すと未完了に戻ること" do
-      # 準備: サブタスク2を完了状態にする
       check_of("サブタスク2").click
       expect(page).to have_no_content("サブタスク2")
       expect(progress_text).to eq "1/3 完了"
 
-      # 完了済みを表示する
       click_on "完了済みを表示"
 
-      # サブタスク2が打ち消し線付きで表示されていることを確認
-      expect(card("サブタスク2")["data-done"]).to eq "true"
+      # card() ヘルパーの代わりに have_css で柔軟に待機・検証
+      expect(page).to have_css("li[data-done='true']", text: "サブタスク2")
       expect(line_through?("サブタスク2")).to be true
       expect(check_of("サブタスク2")["aria-label"]).to eq "「サブタスク2」を未完了に戻す"
 
-      # サブタスク2のチェックを外す（未完了に戻す）
       check_of("サブタスク2").click
 
-      # 打ち消し線が消え、ステータスと進捗が元に戻ることを確認
-      expect(card("サブタスク2")["data-done"]).to eq "false"
+      # 再度の非同期更新を待機
+      expect(page).to have_css("li[data-done='false']", text: "サブタスク2")
       expect(line_through?("サブタスク2")).to be false
       expect(progress_text).to eq "0/3 完了"
     end
@@ -500,10 +495,14 @@ RSpec.describe "S-4 タスク詳細", :js do
     it "すべてのタスクが完了した場合、全完了の空状態（Empty State）が表示されること" do
       expect(page).to have_no_text("すべての手順が完了しました")
 
+      # Turbo Streamの通信が被らないよう、1つずつ消えるのを確認しながらクリックする
       check_of("サブタスク1").click
-      check_of("サブタスク2").click
-      check_of("サブタスク3").click
+      expect(page).to have_no_content("サブタスク1")
 
+      check_of("サブタスク2").click
+      expect(page).to have_no_content("サブタスク2")
+
+      check_of("サブタスク3").click
       expect(page).to have_text("すべての手順が完了しました")
       expect(progress_text).to eq "3/3 完了"
     end
