@@ -1,5 +1,6 @@
-<li class="rounded-xl border border-brand bg-brand-50 p-4 shadow-sm">
+<li id="new_subtask_form" class="rounded-xl border border-brand bg-brand-50 p-4 shadow-sm">
   <%= form_with model: subtask, url: subtask.persisted? ? task_subtask_path(task, subtask) : task_subtasks_path(task), class: "space-y-3" do |f| %>
+    <div>
       <%= f.text_field :title, class: "w-full rounded-md border-line px-3 py-2 text-sm focus:border-brand focus:ring-brand", placeholder: "サブタスク名", autofocus: true %>
     </div>
     <div>
