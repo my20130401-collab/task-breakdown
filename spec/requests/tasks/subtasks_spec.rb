@@ -95,4 +95,33 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
       end
     end
   end
+
+  describe "PATCH /tasks/:task_id/subtasks/:id/toggle_status" do
+    it "未完了のタスクを完了状態にし、Turbo Streamで置換命令を返すこと" do
+      expect(subtask).to be_todo
+
+      patch toggle_status_task_subtask_path(parent_task, subtask), as: :turbo_stream
+
+      expect(subtask.reload).to be_done
+      expect(subtask.completed_at).not_to be_nil
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      # サブタスク自身の更新と、親タスクの進捗バーの更新を両方確認
+      expect(response.body).to include(%(turbo-stream action="replace" target="task_#{subtask.id}"))
+      expect(response.body).to include(%(turbo-stream action="replace" target="task_progress_#{parent_task.id}"))
+    end
+
+    it "完了済みのタスクを未完了状態に戻し、Turbo Streamで置換命令を返すこと" do
+      subtask.update!(status: :done, completed_at: Time.current)
+
+      patch toggle_status_task_subtask_path(parent_task, subtask), as: :turbo_stream
+
+      expect(subtask.reload).to be_todo
+      expect(subtask.completed_at).to be_nil
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      expect(response.body).to include(%(turbo-stream action="replace" target="task_#{subtask.id}"))
+      expect(response.body).to include(%(turbo-stream action="replace" target="task_progress_#{parent_task.id}"))
+    end
+  end
 end

@@ -32,8 +32,11 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   def line_through?(title)
+    expect(page).to have_css("ol [data-subtask-card-target='title']", text: title)
+    # 完了済みリスト(ol)に限らず、ページ全体から該当するサブタスクタイトル要素の出現を待つ
+    expect(page).to have_css("[data-subtask-card-target='title']", text: title)
     page.evaluate_script(<<~JS)
-      getComputedStyle(Array.from(document.querySelectorAll("ol [data-subtask-card-target='title']"))
+      getComputedStyle(Array.from(document.querySelectorAll("[data-subtask-card-target='title']"))
         .find((el) => el.textContent.trim() === #{title.to_json})).textDecorationLine.includes("line-through")
     JS
   end
@@ -68,7 +71,6 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_css("[data-decomposition-status='decomposing']")
 
       shorten_delay(50)
-      sleep 0.5
       expect(page).to have_css("[data-decomposition-status='decomposing']")
       expect(page).to have_current_path("/tasks/sample?status=decomposing&autoplay=0")
     end
@@ -449,6 +451,73 @@ RSpec.describe "S-4 タスク詳細", :js do
       end
 
       expect(page).to have_css(".text-red-600")
+    end
+  end
+
+  describe "サブタスクの完了・未完了状態のトグル (UC-5)" do
+      let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 3.days.from_now) }
+
+      before do
+        parent_task.children.create!(user: user, title: "サブタスク1", status: :todo)
+        parent_task.children.create!(user: user, title: "サブタスク2", status: :todo)
+        parent_task.children.create!(user: user, title: "サブタスク3", status: :todo)
+        visit task_path(parent_task)
+      end
+
+    it "AC-1, AC-4: チェックすると非表示になり、親タスクの進捗がリアルタイムに更新されること" do
+      expect(progress_text).to eq "0/3 完了"
+      expect(page).to have_content("サブタスク1")
+
+      check_of("サブタスク1").click
+      # 非同期更新を待機する
+      expect(page).to have_no_content("サブタスク1")
+      expect(progress_text).to eq "1/3 完了"
+    end
+
+    it "AC-2, AC-3: 「完了済みを表示」で打ち消し線付きで再表示され、チェックを外すと未完了に戻ること" do
+      check_of("サブタスク2").click
+      expect(page).to have_no_content("サブタスク2")
+      expect(progress_text).to eq "1/3 完了"
+
+      click_on "完了済みを表示"
+
+      # 完了済みのサブタスクが表示される（DOMが更新される）のを待機
+      expect(page).to have_css("li[data-done='true']", text: "サブタスク2")
+      expect(line_through?("サブタスク2")).to be true
+      expect(check_of("サブタスク2")["aria-label"]).to eq "「サブタスク2」を未完了に戻す"
+
+      check_of("サブタスク2").click
+
+      # 未完了に戻ったこと（DOMが更新される）のを待機
+      expect(page).to have_css("li[data-done='false']", text: "サブタスク2")
+      # 打ち消し線が消えるのを待機 (evaluate_scriptの前に確実に状態が変わるのを待つ)
+      expect(page).not_to have_css("li[data-done='true']", text: "サブタスク2")
+      expect(line_through?("サブタスク2")).to be false
+      expect(progress_text).to eq "0/3 完了"
+    end
+
+    it "すべてのタスクが完了した場合、全完了の空状態（Empty State）が表示されること" do
+      expect(page).to have_no_text("すべての手順が完了しました")
+
+      # Turbo Streamの通信が被らないよう、1つずつ消えるのを確認しながらクリックする
+      check_of("サブタスク1").click
+      expect(page).to have_no_content("サブタスク1")
+      # 【追加】進捗が更新され、DOMの再構築が落ち着くのを待つ
+      expect(page).to have_css("[data-task-progress]", text: "1/3 完了")
+
+      check_of("サブタスク2").click
+      expect(page).to have_no_content("サブタスク2")
+      expect(page).to have_css("[data-task-progress]", text: "2/3 完了")
+
+      check_of("サブタスク3").click
+      expect(page).to have_no_content("サブタスク3")
+      # 最後の進捗更新を確実に待つことで、Stimulus側のEmpty State表示処理完了を保証する
+      expect(page).to have_css("[data-task-progress]", text: "3/3 完了")
+
+      # UIの最終描画（フェードイン等のアニメーションやDOMの確定）を確実に待つためのウェイト
+
+      # 確実に描画が完了してテキストが表示されるのを待機して検証する
+      expect(page).to have_link("マイタスクへ", href: "/tasks")
     end
   end
 end

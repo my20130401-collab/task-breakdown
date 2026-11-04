@@ -11,8 +11,7 @@
   <% status = :done %>
   <% done = true %>
 
-  <%= tag.div class: "mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]",
-              data: { controller: "completed-filter" } do %>
+  <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]">
     <div class="flex items-center justify-between">
       <%= render "shared/decomposition_status", status: status %>
       <%= render "shared/menu", id: "task-menu", label: "「#{@task.title}」のメニュー",
@@ -28,8 +27,8 @@
         <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
         <%= due_time_tag(@task.due_at) || "期限なし" %>
       </p>
-      <div class="w-40" data-subtasks-target="progress">
-      <%= render "shared/task_progress", done: @subtasks.count(&:done?), total: @subtasks.size %>  
+      <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
+        <%= render "shared/task_progress", done: @subtasks.count(&:done?), total: @subtasks.size %>  
       </div>
     </div>
 
@@ -49,5 +48,5 @@
       <%= render "shared/icon", name: :plus, class: "h-3.5 w-3.5" %>
       タスクを追加
     <% end %>
-  <% end %>
+  </div>
 </div>
