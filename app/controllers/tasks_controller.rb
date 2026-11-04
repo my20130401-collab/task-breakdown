@@ -42,10 +42,17 @@ class TasksController < ApplicationController
   # タスク編集の保存処理
   def update
     if @task.update(task_params)
-      redirect_to tasks_path, notice: t(".success")
+      respond_to do |format|
+        format.html { redirect_to(@task.parent || tasks_path, notice: t(".success")) }
+        format.turbo_stream
+      end
     else
-      flash.now[:alert] = t(".failure")
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render @task.parent ? :show : :edit, status: :unprocessable_entity }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(@task, partial: "tasks/subtask_form", locals: { task: @task }), status: :unprocessable_entity
+        end
+      end
     end
   end
 
