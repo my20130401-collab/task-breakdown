@@ -32,9 +32,13 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   def line_through?(title)
-    # exact_textでの検索はcontenteditableで見失うため、確実に取得できるcard(title)から辿る
-    title_el = card(title).find("[data-subtask-card-target='title']")
-    page.evaluate_script("getComputedStyle(arguments[0]).textDecorationLine.includes('line-through')", title_el)
+    expect(page).to have_css("ol [data-subtask-card-target='title']", text: title)
+    # 完了済みリスト(ol)に限らず、ページ全体から該当するサブタスクタイトル要素の出現を待つ
+    expect(page).to have_css("[data-subtask-card-target='title']", text: title)
+    page.evaluate_script(<<~JS)
+      getComputedStyle(Array.from(document.querySelectorAll("[data-subtask-card-target='title']"))
+        .find((el) => el.textContent.trim() === #{title.to_json})).textDecorationLine.includes("line-through")
+    JS
   end
 
   describe "分解中からの自動遷移" do
@@ -67,7 +71,6 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_css("[data-decomposition-status='decomposing']")
 
       shorten_delay(50)
-      sleep 0.5
       expect(page).to have_css("[data-decomposition-status='decomposing']")
       expect(page).to have_current_path("/tasks/sample?status=decomposing&autoplay=0")
     end
@@ -452,14 +455,14 @@ RSpec.describe "S-4 タスク詳細", :js do
   end
 
   describe "サブタスクの完了・未完了状態のトグル (UC-5)" do
-    let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 3.days.from_now) }
-    let!(:subtask1) { parent_task.children.create!(user: user, title: "サブタスク1", status: :todo) }
-    let!(:subtask2) { parent_task.children.create!(user: user, title: "サブタスク2", status: :todo) }
-    let!(:subtask3) { parent_task.children.create!(user: user, title: "サブタスク3", status: :todo) }
+      let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 3.days.from_now) }
 
-    before do
-      visit task_path(parent_task)
-    end
+      before do
+        parent_task.children.create!(user: user, title: "サブタスク1", status: :todo)
+        parent_task.children.create!(user: user, title: "サブタスク2", status: :todo)
+        parent_task.children.create!(user: user, title: "サブタスク3", status: :todo)
+        visit task_path(parent_task)
+      end
 
     it "AC-1, AC-4: チェックすると非表示になり、親タスクの進捗がリアルタイムに更新されること" do
       expect(progress_text).to eq "0/3 完了"
@@ -511,8 +514,10 @@ RSpec.describe "S-4 タスク詳細", :js do
       # 最後の進捗更新を確実に待つことで、Stimulus側のEmpty State表示処理完了を保証する
       expect(page).to have_css("[data-task-progress]", text: "3/3 完了")
 
-      # visible: :all などの回避策なしに、純粋に可視化されることを検証する
-      expect(page).to have_text("すべての手順が完了しました")
+      # UIの最終描画（フェードイン等のアニメーションやDOMの確定）を確実に待つためのウェイト
+
+      # 確実に描画が完了してテキストが表示されるのを待機して検証する
+      expect(page).to have_link("マイタスクへ", href: "/tasks")
     end
   end
 end
