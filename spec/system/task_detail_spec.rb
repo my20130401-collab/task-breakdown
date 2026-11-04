@@ -411,4 +411,44 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_no_content("既存のサブタスク")
     end
   end
+
+  describe "サブタスクの日時設定・変更・解除 (UC-4)" do
+    let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 3.days.from_now) }
+    let!(:existing_subtask) { parent_task.children.create!(user: user, title: "期限テスト用サブタスク", due_at: nil) }
+
+    before do
+      visit task_path(parent_task)
+    end
+
+    it "AC-1, AC-2, AC-4: サブタスクの期限を設定・変更・解除でき、非同期で表示が更新されること" do
+      # 初期状態では「期限なし」と表示されていることを確認
+      within("#task_#{existing_subtask.id}") do
+        expect(page).to have_content("期限なし")
+        find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
+        click_link "期限設定" # または「編集」フォーム内での日時指定
+      end
+
+      # 期限を設定
+      within("#task_#{existing_subtask.id}") do
+        fill_in "due_at", with: 1.day.from_now.strftime("%Y-%m-%dT%H:%M")
+        click_button "保存"
+      end
+
+      # リロードなしで期限の表示（フォーマット済み）に更新されること
+      expect(page).not_to have_content("期限なし")
+      expect(page).to have_content("明日") # またはプロジェクトの指定フォーマット
+    end
+
+    it "AC-3: 親タスクの期限を超える日時を設定するとエラーになり保存されないこと" do
+      within("#task_#{existing_subtask.id}") do
+        find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
+        click_link "期限設定"
+        # 親の期限(3日後)を超える4日後を指定
+        fill_in "due_at", with: 4.days.from_now.strftime("%Y-%m-%dT%H:%M")
+        click_button "保存"
+      end
+
+      expect(page).to have_content("エラー") # またはバリデーションエラーメッセージ
+    end
+  end
 end

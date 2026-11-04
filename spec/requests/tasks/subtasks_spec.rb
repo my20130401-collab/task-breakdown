@@ -67,5 +67,32 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
       expect(response.media_type).to eq Mime[:turbo_stream]
       expect(response.body).to include(%(turbo-stream action="remove" target="task_#{subtask.id}"))
     end
+
+
+    it "有効な期限（due_at）を設定・更新できること (AC-1, AC-4)" do
+      future_due = 2.hours.from_now
+      patch task_subtask_path(parent_task, subtask), params: { task: { due_at: future_due } }, as: :turbo_stream
+
+      expect(subtask.reload.due_at).to be_within(1.second).of(future_due)
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+    end
+  end
+
+  context "無効なパラメータ（過去の日時や親の期限超え）の場合 (AC-3)" do
+    it "過去の日時を設定しようとした場合、更新されずにエラーを返すこと" do
+      patch task_subtask_path(parent_task, subtask), params: { task: { due_at: 1.hour.ago } }, as: :turbo_stream
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+    end
+ 
+    it "親タスクの期限を超える日時を設定しようとした場合、更新されずにエラーを返すこと" do
+      # 親タスクの期限は 1.day.from_now なので、2.days.from_now を指定
+      patch task_subtask_path(parent_task, subtask), params: { task: { due_at: 2.days.from_now } }, as: :turbo_stream
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+    end
   end
 end
