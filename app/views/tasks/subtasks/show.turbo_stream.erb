@@ -1,0 +1,3 @@
+<%= turbo_stream.replace @subtask do %>
+  <%= render "tasks/subtasks/subtask", subtask: @subtask, number: format("%02d", Task.where(parent_id: @task.id).order(:id).index(@subtask) + 1) %>
+<% end %>

@@ -352,4 +352,63 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).not_to have_content "期限なしタスク"
     end
   end
+
+
+  describe "サブタスクの追加・編集・削除 (UC-3)" do
+    let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 1.day.from_now) }
+    let!(:existing_subtask) { parent_task.children.create!(user: user, title: "既存のサブタスク") }
+
+    before do
+      visit task_path(parent_task)
+    end
+
+    it "AC-1, AC-2: 「タスクを追加」からインラインでタスクを作成できる" do
+      click_link "タスクを追加"
+
+      # フォームが末尾に追加されることを確認
+      expect(page).to have_css("li#new_subtask_form")
+
+      within("li#new_subtask_form") do
+        fill_in "サブタスク名", with: "新しいテストサブタスク"
+        fill_in "補足説明（任意）", with: "テストの補足"
+        click_button "保存"
+      end
+
+      # フォームが消え、タスクとしてリストに追加されることを確認
+      expect(page).to have_no_css("li#new_subtask_form")
+      expect(page).to have_content("新しいテストサブタスク")
+      expect(page).to have_content("テストの補足")
+      # 既存サブタスクの次の番号（02）が振られることを確認
+      expect(page).to have_css("span", text: "02")
+    end
+
+    it "AC-3: 既存のサブタスクをインラインで編集できる" do
+      # メニューを開いて「編集」をクリック
+      find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
+      click_link "編集"
+
+      # Subtask(Task) モデルなので dom_id は task_xx になる
+      within("li#task_#{existing_subtask.id}") do
+        fill_in "サブタスク名", with: "更新されたサブタスク"
+        click_button "保存"
+      end
+
+      # フォームが閉じ、更新後のタイトルが表示されることを確認
+      expect(page).to have_no_field("サブタスク名")
+      expect(page).to have_content("更新されたサブタスク")
+    end
+
+    it "AC-4: サブタスクを削除できる" do
+      expect(page).to have_content("既存のサブタスク")
+
+      # メニューを開いて「削除」をクリックし、ダイアログを承認
+      find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
+      accept_confirm "本当に削除しますか？" do
+        click_link "削除"
+      end
+
+      # リロードなしで画面から消えることを確認
+      expect(page).to have_no_content("既存のサブタスク")
+    end
+  end
 end
