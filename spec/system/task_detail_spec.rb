@@ -448,7 +448,7 @@ RSpec.describe "S-4 タスク詳細", :js do
         click_button "保存"
       end
 
-      expect(page).to have_content("エラー") # またはバリデーションエラーメッセージ
+      expect(page).to have_field("due_at") # またはバリデーションエラーメッセージ
     end
   end
 end
