@@ -80,7 +80,7 @@ module Tasks
     def subtask_params
       # params[:task] が存在しない（空のまま保存された等）場合でもエラーにせず、空のパラメータを返す
       if params[:task].present?
-        params.require(:task).permit(:title, :description)
+        params.require(:task).permit(:title, :description, :due_at)
       else
         ActionController::Parameters.new(title: "").permit(:title, :description)
       end

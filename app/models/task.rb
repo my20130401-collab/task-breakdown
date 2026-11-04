@@ -18,7 +18,8 @@ class Task < ApplicationRecord
 
   # バリデーション
   validates :title, presence: true, length: { maximum: 200 }
-  validate :due_at_cannot_be_in_the_past, on: :create
+  validate :due_at_cannot_be_in_the_past, if: -> { due_at.present? && will_save_change_to_due_at? }
+  validate :due_at_cannot_exceed_parent_due_at, if: -> { parent.present? && due_at.present? && will_save_change_to_due_at? }
   validate :parent_must_belong_to_same_user, if: -> { parent_id.present? }
 
   # コールバック（サブタスク保存・削除後に親タスクの状態を同期）
@@ -56,12 +57,24 @@ class Task < ApplicationRecord
 
   private
 
-  # 期限は新規作成時に過去日時を指定不可（UC-1）
+  # 期限は過去日時を指定不可（UC-1, UC-4）
   def due_at_cannot_be_in_the_past
     return if due_at.blank?
+    return unless will_save_change_to_due_at?
 
     if due_at < Time.current.beginning_of_minute
       errors.add(:due_at, :cannot_be_in_the_past)
+    end
+  end
+
+  # 親タスクの期限を超える日時を設定不可（UC-4）
+  def due_at_cannot_exceed_parent_due_at
+    return if parent.blank? || parent.due_at.blank?
+    return if due_at.blank?
+    return unless will_save_change_to_due_at?
+
+    if due_at.to_i > parent.due_at.to_i
+      errors.add(:due_at, :cannot_exceed_parent_due_at)
     end
   end
 

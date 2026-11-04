@@ -62,6 +62,15 @@ RSpec.describe Task do
         task = build(:task, user: user, due_at: Time.current.beginning_of_minute)
         expect(task).to be_valid
       end
+
+      it "親タスクの期限を超える日時の場合は無効であること (AC-3)" do
+        # 親タスクの期限が3日後の場合、4日後は設定できずにエラーになる
+        parent_task = create(:task, user: user, due_at: 3.days.from_now)
+        task = build(:task, user: user, parent: parent_task, due_at: 4.days.from_now)
+
+        expect(task).not_to be_valid
+        expect(task.errors[:due_at]).to include("は現在より前の日時を設定できません")
+      end
     end
 
     # ユーザーとの紐付けチェック（AC-4 / 認可の基盤）

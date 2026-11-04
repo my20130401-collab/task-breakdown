@@ -21,7 +21,11 @@
         <div class="flex items-center gap-2">
           <div class="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted">
             <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
-            <%= due_time_tag(subtask.due_at) || "期限なし" %>
+            <% if subtask.due_at.present? %>
+              <%= due_time_tag(subtask.due_at) %>
+            <% else %>
+              <%= link_to "期限なし", edit_task_subtask_path(@task, subtask), data: { turbo_stream: true }, class: "hover:underline text-muted" %>
+            <% end %>
           </div>
           <%= render "shared/menu", id: "subtask-menu-#{subtask.id}", label: "「#{subtask.title}」のメニュー",
                 items: [
