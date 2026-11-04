@@ -18,8 +18,8 @@ class Task < ApplicationRecord
 
   # バリデーション
   validates :title, presence: true, length: { maximum: 200 }
-  validate :due_at_cannot_be_in_the_past
-  validate :due_at_cannot_exceed_parent_due_at, if: -> { parent.present? && due_at.present? }
+  validate :due_at_cannot_be_in_the_past, if: -> { due_at.present? && will_save_change_to_due_at? }
+  validate :due_at_cannot_exceed_parent_due_at, if: -> { parent.present? && due_at.present? && will_save_change_to_due_at? }
   validate :parent_must_belong_to_same_user, if: -> { parent_id.present? }
 
   # コールバック（サブタスク保存・削除後に親タスクの状態を同期）
@@ -71,7 +71,7 @@ class Task < ApplicationRecord
   def due_at_cannot_exceed_parent_due_at
     return if parent.blank? || parent.due_at.blank?
     return if due_at.blank?
-    return unless will_save_change_to_due_at? || new_record?
+    return unless will_save_change_to_due_at?
 
     if due_at > parent.due_at
       errors.add(:due_at, :cannot_exceed_parent_due_at)
