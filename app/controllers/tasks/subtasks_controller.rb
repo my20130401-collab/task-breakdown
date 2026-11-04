@@ -23,11 +23,26 @@ module Tasks
       end
     end
 
+    def new
+      @subtask = @task.children.build
+      @subtask.user = Current.user # Userのバリデーションエラーを回避
+    end
+
     def create
-      # AC-1, AC-2: 空のサブタスクを作成し、直後にインライン編集状態にする
-      @subtask = @task.children.create!(title: "")
-      @number = @task.children.count
-      # デフォルトで create.turbo_stream.erb がレンダリングされます
+      @subtask = @task.children.build(subtask_params)
+      @subtask.user = Current.user # Userのバリデーションエラーを回避
+
+      if @subtask.save
+        @number = @task.children.ordered_by_due.pluck(:id).index(@subtask.id).to_i + 1
+        # 成功時は create.turbo_stream.erb がレンダリングされます
+      else
+        # 失敗時はフォームを再描画する
+        render turbo_stream: turbo_stream.replace(
+          "new_subtask_form",
+          partial: "form",
+          locals: { task: @task, subtask: @subtask }
+        ), status: :unprocessable_entity
+      end
     end
 
     def edit
@@ -63,8 +78,12 @@ module Tasks
     end
 
     def subtask_params
-      # 親タスクと同じモデル（Task）を想定
-      params.require(:task).permit(:title, :description)
+      # params[:task] が存在しない（空のまま保存された等）場合でもエラーにせず、空のパラメータを返す
+      if params[:task].present?
+        params.require(:task).permit(:title, :description)
+      else
+        ActionController::Parameters.new(title: "").permit(:title, :description)
+      end
     end
   end
 end
