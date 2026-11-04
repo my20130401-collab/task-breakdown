@@ -73,7 +73,7 @@ class Task < ApplicationRecord
     return if due_at.blank?
     return unless will_save_change_to_due_at?
 
-    if due_at > parent.due_at
+    if due_at.to_i > parent.due_at.to_i
       errors.add(:due_at, :cannot_exceed_parent_due_at)
     end
   end
