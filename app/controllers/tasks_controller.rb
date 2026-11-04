@@ -43,10 +43,11 @@ class TasksController < ApplicationController
   def update
     if @task.update(task_params)
       respond_to do |format|
-        format.html { redirect_to(@task.parent || tasks_path, notice: t(".success")) }
-        format.turbo_stream
+        format.html { redirect_to tasks_path, notice: t(".success") }
+        format.turbo_stream { redirect_to tasks_path, notice: t(".success") }
       end
     else
+      flash.now[:alert] = t(".failure")
       respond_to do |format|
         format.html { render @task.parent ? :show : :edit, status: :unprocessable_entity }
         format.turbo_stream do
