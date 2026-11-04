@@ -26,7 +26,7 @@ class TaskDecomposer
 
     subtasks_data = extract_and_sanitize_subtasks(response)
     if subtasks_data.empty?
-      # 0 件の場合は失敗として処理 (AC-1)
+      # 0 件の場合は失敗として処理
       fail_decomposition!("AI の応答に有効なサブタスクが含まれていません")
       return false
     end
@@ -47,20 +47,20 @@ class TaskDecomposer
     "#{system_part}\n\n#{user_part}"
   end
 
-  # AI からのレスポンスを検品・整形する（AC-1, AC-2, AC-3）
+  # AI からのレスポンスを検品・整形する
   def extract_and_sanitize_subtasks(response)
     raw_subtasks = response[:subtasks] || []
     return [] if raw_subtasks.empty?
 
-    # 13 件以上の場合は先頭 12 件のみ採用 (AC-1)
+    # 13 件以上の場合は先頭 12 件のみ採用
     target_subtasks = raw_subtasks.first(MAX_SUBTASKS_COUNT)
 
     sanitized = []
     target_subtasks.each do |subtask|
       title = subtask[:title]&.to_s&.strip
-      next if title.blank? # タイトルが空の要素は除外 (AC-3)
+      next if title.blank? # タイトルが空の要素は除外
 
-      # 200 文字を超える場合は 200 文字に切り詰め (AC-3)
+      # 200 文字を超える場合は 200 文字に切り詰め
       title = title.truncate(MAX_TITLE_LENGTH, omission: "")
 
       sanitized << {
@@ -74,14 +74,17 @@ class TaskDecomposer
     sanitized
   end
 
-  # 期限日時の検証と親タスク期限への丸め処理 (AC-2)
+  # 期限日時の検証と親タスク期限への丸め処理
   def sanitize_due_at(raw_due_at)
     return nil if raw_due_at.blank?
 
     parsed_time = Time.zone.parse(raw_due_at.to_s) rescue nil
     return nil if parsed_time.nil?
 
-    # 親タスクに期限があり、サブタスク期限がそれを超える場合は親タスクの期限に丸める (AC-2)
+    # 現在日時より前の場合はバリデーション違反を避けるため期限なしとして扱う
+    return nil if parsed_time < Time.current
+
+    # 親タスクに期限があり、サブタスク期限がそれを超える場合は親タスクの期限に丸める
     if @task.due_at.present? && parsed_time > @task.due_at
       @task.due_at
     else
