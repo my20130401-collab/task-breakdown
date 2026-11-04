@@ -1,12 +1,19 @@
 <%= turbo_frame_tag subtask, class: "block" do %>
-  <li class="group relative flex gap-3 rounded-xl border border-line bg-white p-4 shadow-sm hover:border-line-dark">
+  <li class="group relative flex gap-3 rounded-xl border p-4 shadow-sm hover:border-line-dark transition-opacity duration-200 <%= subtask.done? ? 'border-line-dashed bg-surface opacity-60' : 'border-line bg-white' %>" data-completed-filter-target="item" data-status="<%= subtask.status %>">
+     
+    <%= button_to toggle_status_task_subtask_path(@task, subtask), method: :patch, class: "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors #{subtask.done? ? 'border-brand bg-brand text-white' : 'border-line hover:border-line-dark'}" do %>
+      <% if subtask.done? %>
+        <%= render "shared/icon", name: :check, class: "h-3 w-3" %>
+      <% end %>
+    <% end %>
+
     <span class="text-xs font-bold text-muted"><%= number %></span>
   
     <div class="flex-1">
       <div class="flex items-start justify-between gap-4">
         <div class="space-y-1">
           <div class="flex items-center gap-2">
-            <h3 class="text-sm font-semibold text-ink"><%= subtask.title %></h3>
+            <h3 class="text-sm font-semibold text-ink <%= 'line-through text-muted' if subtask.done? %>"><%= subtask.title %></h3>
             <% if subtask.special? %>
               <span class="rounded-md bg-brand-light px-2 py-0.5 text-[10px] font-bold text-brand">特殊</span>
             <% else %>
