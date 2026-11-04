@@ -70,6 +70,6 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    params.expect(task: [ :title, :due_at, :parent_id ])
+    params.require(:task).permit(:title, :due_at, :parent_id, :description)
   end
 end
