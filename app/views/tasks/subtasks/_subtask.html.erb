@@ -1,7 +1,7 @@
 <%= turbo_frame_tag subtask, class: "block" do %>
   <li class="group relative flex gap-3 rounded-xl border p-4 shadow-sm hover:border-line-dark transition-opacity duration-200 <%= subtask.done? ? 'border-line-dashed bg-surface opacity-60' : 'border-line bg-white' %>" data-done="<%= subtask.done? %>">
      
-    <%= button_to toggle_status_task_subtask_path(@task, subtask), method: :patch, class: "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors #{subtask.done? ? 'border-brand bg-brand text-white' : 'border-line hover:border-line-dark'}" do %>
+    <%= button_to toggle_status_task_subtask_path(@task, subtask), method: :patch, class: "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors #{subtask.done? ? 'border-brand bg-brand text-white' : 'border-line hover:border-line-dark'}", data: { subtask_card_target: "check" }, aria: { label: "「#{subtask.title}」を#{subtask.done? ? '未完了に戻す' : '完了にする'}" } do %>
       <% if subtask.done? %>
         <%= render "shared/icon", name: :check, class: "h-3 w-3" %>
       <% end %>
