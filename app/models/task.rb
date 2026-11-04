@@ -69,8 +69,9 @@ class Task < ApplicationRecord
 
   # 親タスクの期限を超える日時を設定不可（UC-4）
   def due_at_cannot_exceed_parent_due_at
-    return unless parent&.due_at.present?
-    return unless will_save_change_to_due_at?
+    return if parent.blank? || parent.due_at.blank?
+    return if due_at.blank?
+    return unless will_save_change_to_due_at? || new_record?
 
     if due_at > parent.due_at
       errors.add(:due_at, :cannot_exceed_parent_due_at)
