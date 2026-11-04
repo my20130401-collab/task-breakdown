@@ -27,7 +27,7 @@ class TasksController < ApplicationController
 
     if @task.save
       # 1. AI 分解履歴（分解中: pending）を作成
-      @task.decompositions.create!(status: :pending, request_payload: {})
+      @task.decompositions.create!(status: :pending, request_payload: { prompt: @task.title })
       # 2. 非同期ジョブをキューに登録（裏側で実行）
       DecomposeTaskJob.perform_later(@task.id)
 
@@ -41,7 +41,7 @@ class TasksController < ApplicationController
 
   # 再分解アクション（失敗時や再実行ボタンから呼ばれる）
   def redecompose
-    @task.decompositions.create!(status: :pending, request_payload: {})
+    @task.decompositions.create!(status: :pending, request_payload: { prompt: @task.title })
     DecomposeTaskJob.perform_later(@task.id)
 
     redirect_to task_path(@task)
