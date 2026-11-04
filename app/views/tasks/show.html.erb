@@ -28,8 +28,8 @@
         <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
         <%= due_time_tag(@task.due_at) || "期限なし" %>
       </p>
-      <div class="w-40" data-subtasks-target="progress">
-      <%= render "shared/task_progress", done: @subtasks.count(&:done?), total: @subtasks.size %>  
+      <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
+        <%= render "shared/task_progress", done: @subtasks.count(&:done?), total: @subtasks.size %>  
       </div>
     </div>
 
