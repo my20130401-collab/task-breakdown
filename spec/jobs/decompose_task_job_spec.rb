@@ -11,6 +11,10 @@ RSpec.describe DecomposeTaskJob do
   # FactoryBot を使ってバリデーションを満たす pending 状態のレコードを作成
   let!(:decomposition) { create(:decomposition, task: task, status: :pending) }
 
+  before do
+    allow(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
+  end
+
   # ----------------------------------------------------------------
   # 1. 正常系：AI分解の成功と Turbo Stream 配信
   # ----------------------------------------------------------------
@@ -20,16 +24,16 @@ RSpec.describe DecomposeTaskJob do
       decomposer_double = instance_double(TaskDecomposer, call: true)
       allow(TaskDecomposer).to receive(:new).with(task: task, decomposition: decomposition).and_return(decomposer_double)
 
-      # 画面の枠（target）に向けて subtasks_content が replace 配信されることを検証
-      expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to).with(
+      # ジョブをその場で即時実行
+      described_class.perform_now(task.id)
+
+      # 画面の枠（target）に向けて subtasks_content が replace 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/subtasks_content",
         locals: { task: task }
       )
-
-      # ジョブをその場で即時実行
-      described_class.perform_now(task.id)
     end
   end
 
@@ -42,15 +46,15 @@ RSpec.describe DecomposeTaskJob do
       decomposer_double = instance_double(TaskDecomposer, call: false)
       allow(TaskDecomposer).to receive(:new).with(task: task, decomposition: decomposition).and_return(decomposer_double)
 
-      # 画面の枠（target）に向けて decomposition_failed が replace 配信されることを検証
-      expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to).with(
+      described_class.perform_now(task.id)
+
+      # 画面の枠（target）に向けて decomposition_failed が replace 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/decomposition_failed",
         locals: { task: task }
       )
-
-      described_class.perform_now(task.id)
     end
   end
 
@@ -72,18 +76,18 @@ RSpec.describe DecomposeTaskJob do
       job = described_class.new(task.id)
       error = StandardError.new("Connection refused")
 
-      # 失敗通知が画面へ replace 配信されることを期待
-      expect(Turbo::StreamsChannel).to receive(:broadcast_replace_to).with(
+      # retry_on do |job, error| のブロック処理を手動で直接呼び出して検証
+      latest_decomposition = task.decompositions.order(created_at: :desc).first
+      latest_decomposition.update!(status: :failed, error_message: error.message)
+      job.send(:broadcast_decomposition_failure, task)
+
+      # 失敗通知が画面へ replace 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/decomposition_failed",
         locals: { task: task }
       )
-
-      # retry_on do |job, error| のブロック処理を手動で直接呼び出して検証
-      latest_decomposition = task.decompositions.order(created_at: :desc).first
-      latest_decomposition.update!(status: :failed, error_message: error.message)
-      job.send(:broadcast_decomposition_failure, task)
 
       # DB のステータスとエラー文が正しく記録されているか検証
       decomposition.reload
