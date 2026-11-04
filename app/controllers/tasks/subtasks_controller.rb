@@ -1,7 +1,7 @@
 module Tasks
   class SubtasksController < ApplicationController
     before_action :set_parent_task
-    before_action :set_subtask, only: %i[show edit update destroy]
+    before_action :set_subtask, only: %i[show edit update destroy toggle_status]
 
     def index
       # タブごとの絞り込みロジック
@@ -65,6 +65,16 @@ module Tasks
     def destroy
       @subtask.destroy
       # destroy.turbo_stream.erb がレンダリングされます
+    end
+
+    def toggle_status
+      if @subtask.done?
+        @subtask.uncomplete!
+      else
+        @subtask.complete!
+      end
+
+        @number = @task.children.ordered_by_due.pluck(:id).index(@subtask.id).to_i + 1
     end
 
     private
