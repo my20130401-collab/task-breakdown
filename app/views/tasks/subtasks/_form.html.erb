@@ -6,6 +6,9 @@
     <div>
       <%= f.text_area :description, rows: 2, class: "w-full rounded-md border-line px-3 py-2 text-xs focus:border-brand focus:ring-brand", placeholder: "補足説明（任意）" %>
     </div>
+    <div>
+      <%= f.datetime_field :due_at, id: "due_at", class: "w-full rounded-md border-line px-3 py-2 text-xs focus:border-brand focus:ring-brand" %>
+    </div>
     <div class="flex justify-end gap-2">
       <!-- キャンセル時は show アクションにリクエストを送り、元の表示に戻す -->
       <% if subtask.persisted? %>
