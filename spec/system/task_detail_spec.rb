@@ -425,7 +425,7 @@ RSpec.describe "S-4 タスク詳細", :js do
       within("#task_#{existing_subtask.id}") do
         expect(page).to have_content("期限なし")
         find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
-        click_link "期限設定" # または「編集」フォーム内での日時指定
+        click_link "編集" # または「編集」フォーム内での日時指定
       end
 
       # 期限を設定
@@ -442,7 +442,7 @@ RSpec.describe "S-4 タスク詳細", :js do
     it "AC-3: 親タスクの期限を超える日時を設定するとエラーになり保存されないこと" do
       within("#task_#{existing_subtask.id}") do
         find("button[aria-controls='subtask-menu-#{existing_subtask.id}']").click
-        click_link "期限設定"
+        click_link "編集"
         # 親の期限(3日後)を超える4日後を指定
         fill_in "due_at", with: 4.days.from_now.strftime("%Y-%m-%dT%H:%M")
         click_button "保存"
