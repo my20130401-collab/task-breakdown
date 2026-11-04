@@ -25,7 +25,7 @@
           </div>
           <%= render "shared/menu", id: "subtask-menu-#{subtask.id}", label: "「#{subtask.title}」のメニュー",
                 items: [
-                  { label: "編集", href: edit_task_subtask_path(@task, subtask) },
+                  { label: "編集", href: edit_task_subtask_path(@task, subtask), data: { turbo_stream: true } },
                   { label: "削除", href: task_subtask_path(@task, subtask), method: :delete, danger: true, data: { turbo_confirm: "本当に削除しますか？" } }
                 ] %>
         </div>
