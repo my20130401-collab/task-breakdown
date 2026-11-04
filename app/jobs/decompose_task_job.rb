@@ -4,9 +4,8 @@
 class DecomposeTaskJob < ApplicationJob
   queue_as :default
 
-  # 一時的なネットワークエラーやレート制限の場合、最大 2 回リトライ
+  # 通信障害やタイムアウト時、2 秒待って最大 2 回リトライ（合計 3 回実行）
   retry_on StandardError, wait: 2.seconds, attempts: 3 do |job, error|
-    # リトライ回数を使い切った場合の最終失敗処理
     task_id = job.arguments.first
     task = Task.find_by(id: task_id)
     if task
@@ -16,10 +15,8 @@ class DecomposeTaskJob < ApplicationJob
     end
   end
 
-  # @param task_id [Integer] 分解対象の親タスクID
   def perform(task_id)
     task = Task.find(task_id)
-    # 最新の pending な分解履歴を取得、なければ新規作成
     decomposition = task.decompositions.where(status: :pending).order(created_at: :desc).first || task.decompositions.build
 
     decomposer = TaskDecomposer.new(task: task, decomposition: decomposition)
@@ -28,13 +25,13 @@ class DecomposeTaskJob < ApplicationJob
     if success
       broadcast_decomposition_success(task)
     else
+      # call が false（0件など）を返した場合の通常失敗処理
       broadcast_decomposition_failure(task)
     end
   end
 
   private
 
-  # 分解成功時：Turbo Stream でタスク詳細画面のサブタスク一覧とステータスを更新
   def broadcast_decomposition_success(task)
     Turbo::StreamsChannel.broadcast_replace_to(
       task,
@@ -44,7 +41,6 @@ class DecomposeTaskJob < ApplicationJob
     )
   end
 
-  # 分解失敗時：Turbo Stream でエラーメッセージと再実行ボタンを表示
   def broadcast_decomposition_failure(task)
     Turbo::StreamsChannel.broadcast_replace_to(
       task,
