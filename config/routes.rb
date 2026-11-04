@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.application.routes.draw do
   resource :session, only: %i[new create destroy]
   resource :registration, only: %i[new create]
@@ -5,7 +7,11 @@ Rails.application.routes.draw do
   # 本実装（タスク機能）
   root "tasks#new"
 
-  resources :tasks, only: %i[index new create edit update destroy]
+  resources :tasks do
+    member do
+      post :redecompose
+    end
+  end
 
   # 画面モック（段階的に移行中）
   # get "tasks" => "mocks#my_tasks", as: :my_tasks_mock
