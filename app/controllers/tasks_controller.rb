@@ -3,8 +3,8 @@
 class TasksController < ApplicationController
   include DueDateHelper
 
-  # 編集・更新・削除・詳細表示の前に、対象のタスクを探しておく共通処理
-  before_action :set_task, only: %i[show edit update destroy]
+  # 編集・更新・削除・詳細表示・再分解の前に、対象のタスクを探しておく共通処理
+  before_action :set_task, only: %i[show edit update destroy redecompose]
 
   # マイタスク一覧（S-5）の表示
   def index
@@ -37,6 +37,14 @@ class TasksController < ApplicationController
       flash.now[:alert] = t(".failure")
       render :new, status: :unprocessable_entity
     end
+  end
+
+  # 再分解アクション（失敗時や再実行ボタンから呼ばれる）
+  def redecompose
+    @task.decompositions.create!(status: :pending, request_payload: {})
+    DecomposeTaskJob.perform_later(@task.id)
+
+    redirect_to task_path(@task)
   end
 
   # タスク編集画面の表示
