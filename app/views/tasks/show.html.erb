@@ -28,21 +28,18 @@
         <%= due_time_tag(@task.due_at) || "期限なし" %>
       </p>
       <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
-        <%= render "shared/task_progress", done: @subtasks.count(&:done?), total: @subtasks.size %>  
+        <%= render "shared/task_progress", done: @task.children.count(&:done?), total: @task.children.size %>  
       </div>
     </div>
 
-    <div id="subtasks_area">
-      <%= render "tasks/subtasks/tabs", task: @task, subtasks: @subtasks, current_filter: "all" %>
-      <%= render "tasks/subtasks/list", subtasks: @subtasks %>
-    </div>
+    <%= render "tasks/subtasks/content", task: @task %>
 
       <%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
                                        body: "完了した手順は「完了済みを表示」で確認できます。",
                                        action: { label: "マイタスクへ", href: tasks_path },
                                        data: { completed_filter_target: "empty" },
-                                       hidden: !(@subtasks.any? && @subtasks.all?(&:done?)) %>
-
+                                       hidden: !(@task.children.any? && @task.children.all?(&:done?)) %>
+                                       
     <%= link_to new_task_subtask_path(@task), data: { turbo_stream: true },
             class: "mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-dashed py-4 text-[11px] font-semibold text-muted hover:bg-white" do %>
       <%= render "shared/icon", name: :plus, class: "h-3.5 w-3.5" %>
