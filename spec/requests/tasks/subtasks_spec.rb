@@ -29,7 +29,7 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
 
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq Mime[:turbo_stream]
-        expect(response.body).to include('turbo-stream action="replace" target="new_subtask_form"')
+        expect(response.body).to include('turbo-stream action="replace" target="subtasks_area"')
       end
     end
   end
@@ -52,7 +52,7 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
         expect(subtask.reload.title).to eq "更新されたタイトル"
         expect(response).to have_http_status(:ok)
         expect(response.media_type).to eq Mime[:turbo_stream]
-        expect(response.body).to include(%(turbo-stream action="replace" target="task_#{subtask.id}"))
+        expect(response.body).to include('turbo-stream action="replace" target="subtasks_area"')
       end
     end
   end
@@ -65,7 +65,7 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
 
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq Mime[:turbo_stream]
-      expect(response.body).to include(%(turbo-stream action="remove" target="task_#{subtask.id}"))
+      expect(response.body).to include('turbo-stream action="replace" target="subtasks_area"')
     end
   end
 
@@ -85,6 +85,7 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.media_type).to eq Mime[:turbo_stream]
+        expect(response.body).to include("現在より前の日時を設定できません")
       end
 
       it "親タスクの期限を超える日時を設定しようとした場合、更新されずにエラーを返すこと" do
@@ -92,6 +93,7 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.media_type).to eq Mime[:turbo_stream]
+        expect(response.body).to include("親タスクの期限を超える日時を設定できません")
       end
     end
   end

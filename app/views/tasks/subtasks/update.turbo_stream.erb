@@ -1,3 +1,9 @@
-<%= turbo_stream.replace @subtask do %>
-  <%= render "tasks/subtasks/subtask", subtask: @subtask, number: format("%02d", Task.where(parent_id: @task.id).order(:id).index(@subtask) + 1) %>
+<%= turbo_stream.replace "subtasks_area" do %>
+  <%= render "tasks/subtasks/content", task: @task %>
+<% end %>
+
+<%= turbo_stream.replace "task_progress_#{@task.id}" do %>
+  <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
+    <%= render "shared/task_progress", done: @task.children.count(&:done?), total: @task.children.size %>
+  </div>
 <% end %>
