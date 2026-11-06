@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "net/http"
 require "json"
 require "uri"
@@ -24,7 +26,15 @@ module Llm
         req["Content-Type"] = "application/json"
         req.body = JSON.generate({
           model: @model,
-          messages: [ { role: "user", content: prompt } ]
+          messages: [ { role: "user", content: prompt } ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "task_decomposition",
+              strict: true,
+              schema: TaskDecomposer::Prompt.response_schema
+            }
+          }
         })
       end
 

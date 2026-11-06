@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # 親タスクを受け取り、LLM による分解、検証・整形、サブタスクの保存を一括して担うサービスクラス
 class TaskDecomposer
   MAX_SUBTASKS_COUNT = 12
@@ -33,9 +35,6 @@ class TaskDecomposer
 
     save_subtasks!(subtasks_data, response)
     true
-  rescue StandardError => e
-    fail_decomposition!(e.message)
-    false
   end
 
   private
