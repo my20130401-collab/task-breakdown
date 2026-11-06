@@ -8,11 +8,12 @@ class DecomposeTaskJob < ApplicationJob
   retry_on StandardError, wait: 2.seconds, attempts: 3 do |job, error|
     task_id = job.arguments.first
     task = Task.find_by(id: task_id)
-    if task
-      decomposition = task.decompositions.order(created_at: :desc).first
-      decomposition&.update(status: :failed, error_message: error.message)
-      broadcast_decomposition_failure(task)
-    end
+    next unless task
+
+    decomposition = task.decompositions.order(created_at: :desc).first
+    decomposition&.update!(status: :failed, error_message: error.message)
+
+    job.send(:broadcast_decomposition_failure, task)
   end
 
   def perform(task_id)

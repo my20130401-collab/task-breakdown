@@ -62,9 +62,11 @@ RSpec.describe DecomposeTaskJob do
   # 3. 異常系：通信障害・リトライと最終失敗ハンドリング
   # ----------------------------------------------------------------
   describe "異常系: リトライとエラーハンドリング" do
-    it "StandardError（通信障害など）が発生した際、ジョブがエラーを拾ってリトライキューに再エンキューされること" do
-      # 通信タイムアウト例外が発生するシチュエーションを再現
-      allow(TaskDecomposer).to receive(:new).and_raise(StandardError.new("API Timeout"))
+    it "LLM クライアントや TaskDecomposer で例外が発生した際、ジョブがエラーを拾ってリトライキューに再エンキューされること" do
+      # TaskDecomposer#call が通信例外を投げる状況を再現
+      decomposer_double = instance_double(TaskDecomposer)
+      allow(TaskDecomposer).to receive(:new).with(task: task, decomposition: decomposition).and_return(decomposer_double)
+      allow(decomposer_double).to receive(:call).and_raise(StandardError.new("API Timeout"))
 
       # エラー発生時に Active Job がエラーを飲み込み、リトライ用としてキューに再登録することを検証
       expect {
