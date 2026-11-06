@@ -69,7 +69,7 @@ RSpec.describe Task do
         task = build(:task, user: user, parent: parent_task, due_at: 4.days.from_now)
 
         expect(task).not_to be_valid
-        expect(task.errors[:due_at]).to include("は現在より前の日時を設定できません")
+        expect(task.errors[:due_at]).to include("は親タスクの期限を超える日時を設定できません")
       end
     end
 
