@@ -51,7 +51,7 @@ class TasksController < ApplicationController
       respond_to do |format|
         format.html { render @task.parent ? :show : :edit, status: :unprocessable_entity }
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(@task, partial: "tasks/subtask_form", locals: { task: @task }), status: :unprocessable_entity
+          render :edit, formats: :html, status: :unprocessable_entity
         end
       end
     end

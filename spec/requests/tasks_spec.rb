@@ -290,6 +290,17 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
         end
       end
 
+      context "Turbo Streamリクエストで無効なパラメータの場合（タイトルが空欄）" do
+        it "タスクは更新されず、422 でedit画面が再描画される（MissingTemplateにならない）" do
+          patch task_path(task), params: { task: { title: "" } }, as: :turbo_stream
+
+          expect(task.reload.title).to eq("更新前のタスク")
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(response.body).to include("タスクの編集")
+          expect(flash.now[:alert]).to eq(I18n.t("tasks.update.failure"))
+        end
+      end
+
       # AC-4: 他人のタスク認可制御
       it "他人のタスクを更新しようとすると 404 Not Found になる" do
         other_user = User.create!(
