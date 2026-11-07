@@ -3,7 +3,7 @@
 - GitHub Actions（`.github/workflows/ci.yml`）: brakeman / bundler-audit / importmap audit / rubocop / rspec
 - rspec ジョブは PostgreSQL サービスコンテナを使う。DB 接続は `DB_HOST` 等の環境変数（`config/database.yml`）
 - test ジョブは `tailwindcss:build` → `db:prepare` → rspec の順。`spec/assets/design_tokens_spec.rb` はビルド後 CSS を読むので、ビルド手順を消すと落ちる
-- 横断検査（`spec/requests/pages_*_spec.rb`）が落ちたら、失敗メッセージに違反した要素のラベルが出る。新しいリンク・ボタンの規約違反か、`Pages::PATHS` の追加漏れかを見る
+- 横断検査（`spec/requests/pages_*_spec.rb`）が落ちたら、失敗メッセージに違反した要素のラベルが出る。新しいリンク・ボタンの規約違反か、`Pages::PUBLIC_PATHS` / `Pages::AUTHENTICATED_PAGES` の追加漏れかを見る（失敗メッセージの巡回名で画面と状態が分かる）
 - system spec（`:js`）はランナーに入っている Google Chrome を `BROWSER_PATH` で cuprite に渡して実行する（「Locate Chrome for system specs」ステップ）
 
 ## 落ちたときの見方
