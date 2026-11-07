@@ -1,0 +1,5 @@
+<%= link_to new_task_subtask_path(task), data: { turbo_stream: true },
+            class: "mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-dashed py-4 text-[11px] font-semibold text-muted hover:bg-white" do %>
+  <%= render "shared/icon", name: :plus, class: "h-3.5 w-3.5" %>
+  タスクを追加
+<% end %>

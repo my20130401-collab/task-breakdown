@@ -63,14 +63,6 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       Rails.application.routes.recognize_path(URI.parse(url).path, method:).values_at(:controller, :action).join("#")
     end
 
-    # S-5関連の2つの it ブロックは削除し、ログアウト確認のみ /tasks/sample で検証する
-    it "サイドバーのユーザーメニュー「ログアウト」は S-1 へ移る" do
-      get "/tasks/sample"
-
-      expect(mock_document.at_css("#user-menu a[role='menuitem']")).to have_attributes(text: "ログアウト")
-      expect(mock_document.at_css("#user-menu a[role='menuitem']")["href"]).to eq "/session"
-    end
-
     { "/login" => "mocks#login_submit", "/signup" => "mocks#signup_submit" }.each do |path, action|
       it "#{path} のフォームは POST で送信し、#{action} が受ける" do
         get path

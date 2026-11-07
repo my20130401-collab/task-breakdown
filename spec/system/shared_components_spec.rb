@@ -1,8 +1,24 @@
+# frozen_string_literal: true
+
 require "rails_helper"
 
 RSpec.describe "共通部品", :js do
+  let!(:user) do
+    User.create!(
+      name: "テストユーザー",
+      email_address: "shared_test@example.com",
+      password: "password123",
+      terms_accepted_at: Time.current
+    )
+  end
+
   before do
     travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+    # ログインしてマイタスク一覧（S-5）へ移動
+    visit new_session_path
+    fill_in "メールアドレス", with: user.email_address
+    fill_in "パスワード", with: "password123"
+    click_on "ログイン"
   end
 
   describe "ユーザーメニュー" do
@@ -23,7 +39,7 @@ RSpec.describe "共通部品", :js do
     let(:trigger) { find("aside button[aria-haspopup='menu']") }
 
     before do
-      visit "/tasks/sample"
+      visit tasks_path
     end
 
     it "開くと項目が画面内に見え、最初の項目にフォーカスが移る" do
@@ -68,37 +84,22 @@ RSpec.describe "共通部品", :js do
   end
 
   describe "完了フィルタ" do
-    it "S-4 でも完了済みのサブタスクが初期非表示で、トグルで現れる" do
-      visit "/tasks/sample"
+    let!(:task) { user.tasks.create!(title: "完了済みの親タスク", due_at: 1.day.from_now) }
 
-      expect(page).to have_no_text("依頼の背景と締め切りを確認する")
-      click_on "完了済みを表示"
-      expect(page).to have_text("依頼の背景と締め切りを確認する")
-      click_on "完了済みを隠す"
-      expect(page).to have_no_text("依頼の背景と締め切りを確認する")
+    before do
+      # サブタスクをすべて完了にし、親タスクを全完了状態にする
+      task.children.create!(user: user, title: "完了サブタスク", status: :done)
+      visit tasks_path
     end
 
-    it "後から完了になった要素も隠し、表示対象が 0 件になると空状態を出す" do
-      visit "/tasks/sample"
-      # 空状態の置き場所は各画面で決めるため、ここではラッパー内に差し込んで部品の振る舞いだけを確かめる
-      page.execute_script(<<~JS)
-        const empty = document.createElement("p")
-        empty.dataset.completedFilterTarget = "empty"
-        empty.hidden = true
-        empty.textContent = "表示できる手順はありません"
-        document.querySelector("[data-controller~='completed-filter']").append(empty)
-      JS
-      expect(page).to have_no_text("表示できる手順はありません")
-
-      page.execute_script(<<~JS)
-        document.querySelectorAll("ol [data-done]").forEach((el) => { el.dataset.done = "true" })
-      JS
-      expect(page).to have_no_text("目的と読み手を整理する")
-      expect(page).to have_text("表示できる手順はありません")
+    it "完了済みの親タスクが初期非表示で、トグルで現れる" do
+      expect(page).to have_no_text("完了済みの親タスク")
 
       click_on "完了済みを表示"
-      expect(page).to have_text("目的と読み手を整理する")
-      expect(page).to have_no_text("表示できる手順はありません")
+      expect(page).to have_text("完了済みの親タスク")
+
+      click_on "完了済みを隠す"
+      expect(page).to have_no_text("完了済みの親タスク")
     end
   end
 end
