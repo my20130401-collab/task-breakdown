@@ -3,7 +3,7 @@
 - GitHub Actions（`.github/workflows/ci.yml`）: brakeman / bundler-audit / importmap audit / rubocop / rspec
 - rspec ジョブは PostgreSQL サービスコンテナを使う。DB 接続は `DB_HOST` 等の環境変数（`config/database.yml`）
 - test ジョブは `tailwindcss:build` → `db:prepare` → rspec の順。`spec/assets/design_tokens_spec.rb` はビルド後 CSS を読むので、ビルド手順を消すと落ちる
-- 横断検査（`spec/requests/mock_*_spec.rb`）が落ちたら、失敗メッセージに違反した要素のラベルが出る。新しいリンク・ボタンの規約違反か、`MockPages::PATHS` の追加漏れかを見る
+- 横断検査（`spec/requests/pages_*_spec.rb`）が落ちたら、失敗メッセージに違反した要素のラベルが出る。新しいリンク・ボタンの規約違反か、`Pages::PUBLIC_PATHS` / `Pages::AUTHENTICATED_PAGES` の追加漏れかを見る（失敗メッセージの巡回名で画面と状態が分かる）
 - system spec（`:js`）はランナーに入っている Google Chrome を `BROWSER_PATH` で cuprite に渡して実行する（「Locate Chrome for system specs」ステップ）
 
 ## 落ちたときの見方
@@ -14,5 +14,5 @@
 - デザイントークン spec: 「tailwind.css がありません」はビルド漏れ。値の不一致はトークンの値を変えたか、Tailwind の更新で圧縮後の表記が変わったかのどちらか
 
 ## flaky
-- system spec が Google Fonts（fonts.googleapis.com / gstatic）のリクエスト保留で Ferrum タイムアウトすることがあった（`smoke_spec`、#17 の CI、再実行で緑）。#11 で cuprite の `url_blacklist` により遮断済み（`spec/support/capybara.rb`、確認は `smoke_spec`）。それでも Ferrum タイムアウトが出たら、他の外部リクエストが増えていないか `mock_links_spec` の外部参照の検査と合わせて見る。一時しのぎは `gh run rerun <id> --failed`（2026-10-25）
+- system spec が Google Fonts（fonts.googleapis.com / gstatic）のリクエスト保留で Ferrum タイムアウトすることがあった（`smoke_spec`、#17 の CI、再実行で緑）。#11 で cuprite の `url_blacklist` により遮断済み（`spec/support/capybara.rb`、確認は `smoke_spec`）。それでも Ferrum タイムアウトが出たら、他の外部リクエストが増えていないか `pages_links_spec` の外部参照の検査と合わせて見る。一時しのぎは `gh run rerun <id> --failed`（2026-10-25）
 

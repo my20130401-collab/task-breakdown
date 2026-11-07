@@ -30,6 +30,41 @@ RSpec.describe "認証機能（本番フロー）", :js do
         expect(page).to have_content("新")
       end
     end
+
+    it "パスワードが 8 文字未満だと送信されない" do
+      visit new_registration_path
+      fill_in "お名前", with: "山田 優"
+      fill_in "メールアドレス", with: "yu.yamada@example.com"
+      # minlength はユーザーが入力した値にだけ効くので、キー入力で打ち込む（fill_in の値設定では tooShort が立たない）
+      find_field("パスワード").send_keys("pass123")
+      find_field("パスワード（確認）").send_keys("pass123")
+      check "利用規約とプライバシーポリシーに同意する"
+
+      expect(page.evaluate_script("document.querySelector('input[name=\"user[password]\"]').validity.tooShort")).to be true
+
+      click_on "アカウントを作成する"
+
+      sleep 0.3
+      expect(page).to have_current_path(new_registration_path)
+      expect(page).to have_no_css("aside")
+      expect(User.exists?(email_address: "yu.yamada@example.com")).to be false
+    end
+
+    it "利用規約を新しいタブで開いても、入力途中のフォームはそのまま残る" do
+      visit new_registration_path
+      fill_in "お名前", with: "山田 優"
+      fill_in "メールアドレス", with: "yu.yamada@example.com"
+
+      terms = window_opened_by { click_on "利用規約" }
+
+      within_window(terms) do
+        expect(page).to have_css("h1", text: "利用規約")
+        expect(page).to have_link("会員登録に戻る", href: new_registration_path)
+      end
+      expect(page).to have_current_path(new_registration_path)
+      expect(find_field("お名前").value).to eq "山田 優"
+      expect(find_field("メールアドレス").value).to eq "yu.yamada@example.com"
+    end
   end
 
   # ------------------------------------------------------------
