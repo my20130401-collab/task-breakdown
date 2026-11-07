@@ -16,6 +16,8 @@ RSpec.describe "タスク機能", :js do
     fill_in "メールアドレス", with: user.email_address
     fill_in "パスワード", with: "password123"
     click_on "ログイン"
+    # ログインの完了（ホームへの遷移）を待つ。待たずに visit すると Cookie が付く前でログイン画面へ戻されることがある
+    page.assert_current_path(root_path)
   end
 
   # ------------------------------------------------------------
@@ -106,7 +108,6 @@ RSpec.describe "タスク機能", :js do
     let!(:task) { user.tasks.create!(title: "取引先への見積書を提出する", due_at: 2.days.from_now) }
 
     before do
-      page.assert_current_path(root_path)
       task.children.create!(user: user, title: "仕入れ先に見積もりを依頼する", due_at: 1.day.from_now)
       visit tasks_path
     end
