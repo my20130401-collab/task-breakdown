@@ -54,7 +54,7 @@
   <div>
     <label class="flex items-start gap-2 text-[11px] text-muted">
       <%= f.check_box :terms_of_service, { required: true, class: "mt-0.5 h-3.5 w-3.5 rounded border-line accent-brand" }, "1", "0" %>
-      <span><% legal_link = { target: "_blank", rel: "noopener", aria: { describedby: "terms-new-tab" }, class: "text-brand underline-offset-2 hover:underline" } %><%= link_to "利用規約", terms_mock_path, **legal_link %>と<%= link_to "プライバシーポリシー", privacy_mock_path, **legal_link %>に同意する</span>
+      <span><% legal_link = { target: "_blank", rel: "noopener", aria: { describedby: "terms-new-tab" }, class: "text-brand underline-offset-2 hover:underline" } %><%= link_to "利用規約", terms_path, **legal_link %>と<%= link_to "プライバシーポリシー", privacy_path, **legal_link %>に同意する</span>
     </label>
     <p id="terms-new-tab" class="mt-1 pl-[22px] text-2xs text-subtle">（いずれも新しいタブで開きます）</p>
   </div>

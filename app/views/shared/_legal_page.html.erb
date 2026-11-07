@@ -1,0 +1,38 @@
+<%# S-6 利用規約・S-7 プライバシーポリシー（ログイン前の画面）。title: eyebrow: sections: は必須。
+    sections は [{ heading:, body: [...] }]。body の要素は文字列なら段落、配列なら箇条書きになる。
+    会員登録（S-2）の同意文から新しいタブで開く %>
+<% content_for :title, "#{title} | Tasklet" %>
+
+<div class="mt-12 w-full max-w-[640px] text-center">
+  <p class="text-[11px] font-semibold tracking-[0.12em] text-brand-dot"><%= eyebrow %></p>
+  <h1 class="mt-3 font-serif text-[32px] font-bold tracking-tight"><%= title %></h1>
+</div>
+
+<article class="mt-9 w-full max-w-[640px] space-y-7 rounded-2xl border border-line bg-white p-8 text-[13px] leading-relaxed text-ink/80 shadow-float">
+  <p class="rounded-lg bg-accent-soft px-4 py-3 text-ink">
+    Tasklet は、ハッカソンのために制作したデモ用のサービスです。デモ期間中の試用を目的として提供しており、正式なサービスではありません。
+  </p>
+
+  <% sections.each.with_index(1) do |section, number| %>
+    <section class="space-y-2" aria-labelledby="legal-section-<%= number %>">
+      <h2 id="legal-section-<%= number %>" class="text-[14px] font-bold text-ink"><%= number %>. <%= section[:heading] %></h2>
+      <% section[:body].each do |block| %>
+        <% if block.is_a?(Array) %>
+          <ul class="list-disc space-y-1 pl-5">
+            <% block.each do |item| %>
+              <li><%= item %></li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p><%= block %></p>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+</article>
+
+<p class="mt-6 text-[12px] text-muted">
+  <%= link_to new_registration_path, class: "inline-flex items-center gap-1 font-semibold text-brand hover:underline" do %>
+    <%= render "shared/icon", name: :chevron_left, class: "h-3.5 w-3.5" %>会員登録に戻る
+  <% end %>
+</p>
