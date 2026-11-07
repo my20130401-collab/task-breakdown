@@ -47,7 +47,7 @@ http://localhost:3000 を開くとログイン画面が表示されます。最�
 | 利用規約 | http://localhost:3000/terms | 不要 |
 | プライバシーポリシー | http://localhost:3000/privacy | 不要 |
 
-AI 分解に OpenAI の API を使うときは、リポジトリ直下の `.env` に `OPENAI_API_KEY=<API キー>` を書いてから `docker compose up -d` します。API キーが無いときは、固定の手順（「見積もり作成」の 3 件）を返すテスト用の分解で動きます。
+手元の開発サーバとテストは、OpenAI の API キー無しで、固定の手順（「見積もり作成」の 3 件）を返すテスト用の分解で動きます。実際の AI の分解を確かめるときは、評価コマンドにだけキーを渡します（`docker compose run --rm -e OPENAI_API_KEY=<API キー> web bin/rails eval:decompose`。シェルの環境変数に `OPENAI_API_KEY` があるなら `-e OPENAI_API_KEY` だけでよい）。
 
 ## よく使うコマンド
 
@@ -60,7 +60,7 @@ Rails のコマンドは、パソコンで直接ではなく `docker compose run
 | セキュリティ診断 | `docker compose run --rm web bin/brakeman` |
 | ログを見る | `docker compose logs -f web` |
 | CSS を作り直す | `docker compose run --rm css bin/rails tailwindcss:build` |
-| AI 分解の品質評価（OpenAI の API キーが必要） | `docker compose run --rm web bin/rails eval:decompose` |
+| AI 分解の品質評価（OpenAI の API キーが必要） | `docker compose run --rm -e OPENAI_API_KEY=<API キー> web bin/rails eval:decompose` |
 
 ほかのコマンドとトラブル対処は [開発環境の構築](docs/dev/setup.md#6-よく使うコマンド) にまとめています。
 

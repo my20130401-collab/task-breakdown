@@ -6,7 +6,7 @@
 - ルーティング（`config/routes.rb`）: `resource :session`（`/session/new`）・`resource :registration`（`/registration/new`）・`/terms` `/privacy`（`PagesController`、ログイン不要）・`root "tasks#new"`・`resources :tasks`（`id` は数値のみ。`POST /tasks/:id/redecompose`）・`tasks/:task_id/subtasks`（`Tasks::SubtasksController`、`PATCH .../toggle_status`）・`/up`。画面モック（`MocksController`、`/tasks/sample` `/login` `/signup`）は #107 で撤去済みで、`spec/requests/removed_mock_routes_spec.rb` が 404 を確認する
 - 認証は Rails 8 標準（`Authentication` concern）。ログイン不要の画面は `allow_unauthenticated_access`、ログイン済みで開かせない画面は `redirect_if_authenticated`。他人のデータは `Current.user.tasks.find` で 404 にする
 - AI 分解: `TasksController#create` / `#redecompose` が分解履歴（`pending`）を作って `DecomposeTaskJob` を積む。ジョブは `TaskDecomposer` → `Llm::Client.build`（`LLM_CLIENT` → `OPENAI_API_KEY` の有無で `openai` / `fake`）を呼び、結果を `turbo_stream_from @task` に `decomposition_content_<id>` / `decomposition_status_<id>` / `task_progress_<id>` の 3 か所へ配信する
-- 開発環境の `.env` は `compose.yaml` の `env_file`（`required: false`）でコンテナに渡る。`OPENAI_API_KEY` を置けば手元でも実 API、無ければ fake（#111）
+- `compose.yaml` に `env_file` は置かない（`.env` はコンテナに渡らない）。`.env` を渡すとテストコンテナにも `OPENAI_API_KEY` が入り、`Llm::Client.build` が openai を選んで WebMock 遮断で AI 関連の spec が落ちる（CI は `.env` が無いので気づけない）。開発サーバ・テストは fake、実 API は `docker compose run --rm -e OPENAI_API_KEY web bin/rails eval:decompose` のようにコマンド単位で渡す（#111）
 - SimpleCov の閾値は `MIN_COVERAGE`（既定 0）。カバレッジは目標 80% の参考値で、CI で閾値チェックはしない（キックオフの方針）
 
 ## デザイントークン（`app/assets/tailwind/application.css` の `@theme`）

@@ -5,10 +5,6 @@ x-app: &app
   volumes:
     - .:/app
     - bundle:/usr/local/bundle
-  # OPENAI_API_KEY 等はリポジトリ直下の .env に置く（コミットしない）。無ければ読まない
-  env_file:
-    - path: .env
-      required: false
   environment: &app-env
     DB_HOST: db
     DB_USERNAME: postgres

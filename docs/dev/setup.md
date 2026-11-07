@@ -164,7 +164,7 @@ http://localhost:3000 を開き、ログイン画面（「おかえりなさい�
 | 利用規約 | http://localhost:3000/terms | 不要 |
 | プライバシーポリシー | http://localhost:3000/privacy | 不要 |
 
-AI 分解は、リポジトリ直下の `.env` に `OPENAI_API_KEY=<API キー>` を書いて `docker compose up -d` し直すと OpenAI の API で動き、`.env` が無ければ API を使わない固定の分解（「見積もり作成」の 3 件）で動きます（`.env` はコミットしません）。
+開発サーバとテストは API キー無しで、OpenAI の API を使わない固定の分解（「見積もり作成」の 3 件）で動きます。実際の AI の分解は、評価コマンドにだけキーを渡して確かめます（`docker compose run --rm -e OPENAI_API_KEY=<API キー> web bin/rails eval:decompose`。シェルの環境変数に `OPENAI_API_KEY` があるなら `-e OPENAI_API_KEY` だけでよい。詳しくは [AI タスク分解の設計](../ai-decomposition.md) の品質評価）。
 
 ### 3-5. 止める・再開する
 
