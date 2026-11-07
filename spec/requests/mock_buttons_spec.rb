@@ -43,7 +43,7 @@ RSpec.describe "画面モックのボタン（横断検査）" do
       mock_document.css("button[data-mock='noop']").map { it.text.squish }
     end
 
-    %w[/login /signup /terms /privacy].each do |path|
+    %w[/session/new /registration/new /terms /privacy].each do |path|
       it "#{path} には見た目のみのボタンが無い" do
         expect(noop_labels(path)).to be_empty
       end
