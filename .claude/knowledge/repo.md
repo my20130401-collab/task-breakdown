@@ -39,10 +39,10 @@
 
 ## 横断検査（`spec/requests/pages_*_spec.rb`）
 - 巡回対象は `spec/support/pages.rb` に集約する（#109 で拡張）。**画面や状態を足したらここにも足す**。`Pages` は request spec に include 済み
-  - `Pages::PUBLIC_PATHS`: ログイン前の 4 画面（`/session/new` `/registration/new` `/terms` `/privacy`）。そのまま GET する
-  - `Pages::AUTHENTICATED_PAGES`: 巡回名 → 準備の種類。ログイン後の 8 画面（S-3、S-5 データあり／0 件、S-4 分解中／分解完了／分解失敗／全完了、S-8 編集）
-  - `Pages::ALL`: 両方を合わせた巡回一覧。検査はこれを回す
-  - ログイン後の画面は `get_page(name)` で開く: `reset!` → ユーザー作成 → ログイン → FactoryBot で状態（タスク・分解履歴・サブタスク）を用意 → GET。巡回ごとにセッションとデータを作り直すので、画面間で状態が漏れない
+  - `Pages::PUBLIC_PATHS`: ログイン前の 4 画面のパス（`/session/new` `/registration/new` `/terms` `/privacy`）。巡回名＝パスで、そのまま GET する
+  - `Pages::AUTHENTICATED_PAGES`: 巡回名（例「/tasks/:id（S-4 タスク詳細。分解中）」。失敗メッセージに出る）→ 準備の種類（`:new_task` `:tasks` `:tasks_empty` `:task_decomposing` `:task_decomposed` `:task_decomposition_failed` `:task_all_subtasks_done` `:task_edit`）。ログイン後の 8 画面（S-3、S-5 データあり／0 件、S-4 分解中／分解完了／分解失敗／全完了、S-8 編集）。S-4 の種類は `S4_TRAITS` で Task ファクトリの trait（`:decomposing` 等）に対応づける
+  - `Pages::ALL`: `PUBLIC_PATHS + AUTHENTICATED_PAGES.keys`。検査はこれを回す
+  - 画面は `get_page(name)` で開く。ログイン後の画面は `authenticated_page_path(kind)` が `reset!`（前の画面のログインが残るとログインし直せず S-3 へ戻されるため）→ ユーザー作成 → `POST /session` でログイン → FactoryBot で状態を用意 → その URL を GET。巡回ごとにユーザーとデータを作り直すので、画面間で状態が漏れない。S-5 のデータありは日付グループ複数・進捗なし（—）・全完了・期限なしの行を含む（`tasks_with_data_path`）
 - `pages_links_spec`: 全 `<a href>` / `<form action>` が `recognize_path` で解決できる（`#`・外部 URL 不可。`data-turbo-method` / hidden `_method` も見る。外部参照は `ALLOWED_EXTERNAL_HOSTS` の Web フォントだけ）。ログイン前レイアウト（`aside` 無し・ロゴは `/`）、S-1/S-2 の POST 先、規約リンクの `target=_blank rel=noopener` もここ
 - `pages_buttons_spec`: 全 `<button>` が「`type="submit"` かつ form 内」か「`data-action` あり」のどちらかで、`type` を明示。見た目だけのボタン（`data-mock="noop"`）は全画面で 0 件（`shared/_menu` の href 無し項目が出たら落ちる）。規約・ポリシーにはボタンが無いので、空集合の検査は巡回全体の `<button>` 件数 > 0 で行う
 - `pages_views_spec`: `<title>` が「〜 | Tasklet」、トークン外の色・文字サイズ（描画結果と `app/views` の両方）、id の画面内一意（`role="menu"` 含む）、メニューのトリガーと完了チェック（`data-subtask-card-target="check"`）の `aria-label` の一意、`contenteditable` が無い
