@@ -9,6 +9,13 @@
 <%= form_with model: @user, url: registration_path,
               class: "mt-9 w-full max-w-[420px] space-y-5 rounded-2xl border border-line bg-white p-8 shadow-float" do |f| %>
 
+  <%# 回数制限などで戻されたときの案内 %>
+  <% if alert = flash[:alert] %>
+    <div class="rounded-lg border border-danger-dot/30 bg-danger-soft p-4 text-left" role="alert">
+      <p class="text-[13px] font-medium text-danger"><%= alert %></p>
+    </div>
+  <% end %>
+
   <%# エラーメッセージ表示ブロック（入力不備がある場合のみ赤枠で表示） %>
   <% if @user.errors.any? %>
     <div class="rounded-lg border border-danger-dot/30 bg-danger-soft p-4 text-left" role="alert">

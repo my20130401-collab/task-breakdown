@@ -75,6 +75,59 @@ RSpec.describe "タスク機能", :js do
     end
   end
 
+  describe "空白だけの入力" do
+    def submit_blank_only
+      expect(page).to have_current_path(root_path)
+      textarea = find("textarea[aria-label='取り組みたいこと']")
+      textarea.send_keys("   ")
+      textarea
+    end
+
+    it "ボタンで送信しようとしても送信されず、入力を求めるメッセージが出る" do
+      textarea = submit_blank_only
+      click_on "タスクを分解する"
+
+      expect(page).to have_current_path(root_path)
+      expect(textarea.evaluate_script("this.validationMessage")).to eq "取り組みたいことを入力してください"
+      expect(Task.count).to eq 0
+    end
+
+    it "Ctrl + Enter で送信しようとしても送信されない" do
+      textarea = submit_blank_only
+      textarea.send_keys([ :control, :enter ])
+
+      expect(page).to have_current_path(root_path)
+      expect(textarea.evaluate_script("this.validity.valid")).to be false
+      expect(Task.count).to eq 0
+    end
+  end
+
+  describe "マイタスク（S-5）の行からタスク詳細（S-4）へ" do
+    let!(:task) { user.tasks.create!(title: "取引先への見積書を提出する", due_at: 2.days.from_now) }
+
+    before do
+      page.assert_current_path(root_path)
+      task.children.create!(user: user, title: "仕入れ先に見積もりを依頼する", due_at: 1.day.from_now)
+      visit tasks_path
+    end
+
+    it "行（タイトルを含むリンク）を押すとタスク詳細へ移る" do
+      find("li[data-done]", text: "取引先への見積書を提出する").find("a[href='#{task_path(task)}']").click
+
+      expect(page).to have_current_path(task_path(task))
+      expect(page).to have_css("h1", text: "取引先への見積書を提出する")
+      expect(page).to have_content("仕入れ先に見積もりを依頼する")
+    end
+
+    it "カードのタイトル以外の場所（左上の余白）を押してもタスク詳細へ移る" do
+      row = find("li[data-done]", text: "取引先への見積書を提出する")
+      # カードの左上の余白（文字の無い padding）を押す。カード全面がリンクの当たり判定になっている
+      row.click(x: 6, y: 6)
+
+      expect(page).to have_current_path(task_path(task))
+    end
+  end
+
   # ------------------------------------------------------------
   # 4: マイタスク一覧画面（S-5）の表示と並び替え
   # ------------------------------------------------------------

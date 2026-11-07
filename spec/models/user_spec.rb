@@ -36,6 +36,26 @@ RSpec.describe User do
       end
     end
 
+    # S-2 会員登録: 「利用規約とプライバシーポリシーに同意する」のチェック（terms_of_service）
+    describe "利用規約への同意のチェック（terms_of_service）" do
+      let(:user) { build(:user, terms_accepted_at: nil) }
+
+      it "チェックした（\"1\"）ときは、作成時に同意した日時を記録する" do
+        travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+        user.terms_of_service = "1"
+
+        expect(user.save).to be true
+        expect(user.terms_accepted_at).to eq Time.current
+      end
+
+      it "チェックしない（\"0\"）ときは無効で、エラーは terms_of_service の 1 件だけ" do
+        user.terms_of_service = "0"
+
+        expect(user).not_to be_valid
+        expect(user.errors.full_messages).to eq [ "利用規約とプライバシーポリシーに同意してください" ]
+      end
+    end
+
     # S-2 会員登録: メールアドレスの検証（必須・一意性・形式・正規化）
     describe "メールアドレス（email_address）" do
       it "必須であること" do
