@@ -18,6 +18,11 @@ RSpec.describe "画面の表示（横断検査）" do
         expect(pages_document.at_css("body").to_html.scan(Pages::BANNED_VALUES)).to be_empty
       end
 
+      # Tailwind 既定の色（text-red-600 等）や、@theme に無い色名（text-main 等）は CSS が生成されないか、トークン外の色になる
+      it "色のユーティリティが @theme のトークン（と white 等の基本値）だけを使う" do
+        expect(undefined_color_classes(pages_document)).to be_empty
+      end
+
       it "id が画面内で重複しない（メニュー role=menu を含む）" do
         ids = pages_document.css("[id]").map { it["id"] }
         menu_ids = pages_document.css("[role='menu']").map { it["id"] }
@@ -76,5 +81,23 @@ RSpec.describe "画面の表示（横断検査）" do
     end
 
     expect(offenders).to be_empty
+  end
+
+  # 巡回で描画されない分岐（エラー表示など）も含めて、ファイルから Tailwind 既定のカラーパレットを探す
+  it "app/views と app/helpers に Tailwind 既定のカラーパレット（red-600 等）を書いていない" do
+    offenders = Rails.root.glob("app/{views,helpers}/**/*.{erb,rb}").flat_map do |file|
+      file.read.scan(Pages::TAILWIND_PALETTE).map { "#{file.relative_path_from(Rails.root)}: #{it}" }
+    end
+
+    expect(offenders).to be_empty
+  end
+
+  it "色のユーティリティの判定が、トークン外の色だけを拾う" do
+    doc = Nokogiri::HTML(<<~HTML)
+      <p class="text-main text-red-600 hover:bg-red-50 text-ink text-ink/80 text-2xs text-[13px] text-center
+                bg-danger-soft border border-b-2 border-line ring-2 ring-brand-dot outline-none hover:text-brand"></p>
+    HTML
+
+    expect(undefined_color_classes(doc)).to contain_exactly("text-main", "text-red-600", "hover:bg-red-50")
   end
 end

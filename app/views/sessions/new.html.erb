@@ -10,14 +10,14 @@
               class: "mt-9 w-full max-w-[420px] space-y-5 rounded-2xl border border-line bg-white p-8 shadow-float" do |f| %>
 
   <% if alert = flash[:alert] %>
-    <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-left">
-      <p class="text-[13px] font-medium text-red-600"><%= alert %></p>
+    <div class="rounded-lg border border-danger-dot/30 bg-danger-soft p-4 text-left" role="alert">
+      <p class="text-[13px] font-medium text-danger"><%= alert %></p>
     </div>
   <% end %>
 
   <%# メールアドレス %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :email_address, "メールアドレス", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :email_address, "メールアドレス", class: "block text-[11px] font-medium text-ink" %>
     <%= f.email_field :email_address, value: params[:email_address], placeholder: "you@example.com",
                       autocomplete: "username", required: true, autofocus: true,
                       class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
@@ -25,7 +25,7 @@
 
   <%# パスワード %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :password, "パスワード", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :password, "パスワード", class: "block text-[11px] font-medium text-ink" %>
     <%= f.password_field :password, autocomplete: "current-password", required: true,
                          class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
   </div>

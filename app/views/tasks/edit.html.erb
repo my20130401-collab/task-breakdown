@@ -8,7 +8,7 @@
 
   <%= form_with model: @task, class: "space-y-6" do |f| %>
     <% if @task.errors.any? %>
-      <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-600">
+      <div class="rounded-xl border border-danger-dot/30 bg-danger-soft p-4 text-[13px] text-danger" role="alert">
         <ul class="list-disc pl-5 space-y-1">
           <% @task.errors.full_messages.each do |message| %>
             <li><%= message %></li>

@@ -11,7 +11,7 @@
       <%= tag.div role: (type == :notice ? "status" : "alert"),
                   class: class_names("pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-float",
                                      "border-brand-dot bg-brand-soft text-brand": type == :notice,
-                                     "border-danger-dot bg-danger-soft text-danger": type == :alert),
+                                     "border-danger-dot/30 bg-danger-soft text-danger": type == :alert),
                   data: { controller: "flash", flash: type, flash_timeout_value: (5000 if type == :notice) } do %>
         <p class="flex-1"><%= message %></p>
         <button type="button" aria-label="お知らせを閉じる" data-action="flash#close"

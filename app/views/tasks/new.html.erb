@@ -10,7 +10,7 @@
 
   <%# バリデーションエラーがある場合のエラーメッセージ表示 %>
   <% if @task.errors.any? %>
-    <div class="mt-6 w-full rounded-xl border border-red-200 bg-red-50 p-4 text-left text-sm text-red-600">
+    <div class="mt-6 w-full rounded-xl border border-danger-dot/30 bg-danger-soft p-4 text-left text-sm text-danger" role="alert">
       <ul class="list-inside list-disc space-y-1">
         <% @task.errors.full_messages.each do |message| %>
           <li><%= message %></li>

@@ -1,7 +1,7 @@
 <li id="<%= subtask.persisted? ? dom_id(subtask) : 'new_subtask_form' %>" class="rounded-xl border border-brand bg-brand-soft p-4 shadow-sm">
   <%= form_with model: subtask, url: subtask.persisted? ? task_subtask_path(task, subtask) : task_subtasks_path(task), class: "space-y-3" do |f| %>
     <% if subtask.errors.any? %>
-      <div class="rounded-md bg-red-50 p-2 text-xs text-red-600 space-y-1">
+      <div class="rounded-md bg-danger-soft p-2 text-xs text-danger space-y-1" role="alert">
         <ul class="list-disc list-inside">
           <% subtask.errors.full_messages.each do |message| %>
             <li><%= message %></li>

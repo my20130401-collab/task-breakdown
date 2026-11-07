@@ -171,7 +171,7 @@ RSpec.describe "S-4 タスク詳細", :js do
         click_button "保存"
       end
 
-      expect(page).to have_css(".text-red-600")
+      expect(page).to have_css("#task_#{existing_subtask.id} [role='alert']", text: "期限は親タスクの期限を超える日時を設定できません")
     end
   end
 
