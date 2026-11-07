@@ -126,4 +126,36 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
       expect(response.body).to include(%(turbo-stream action="replace" target="task_progress_#{parent_task.id}"))
     end
   end
+
+  # サブタスクのカードは <li> そのもの（id="task_<id>"）で、Turbo Stream はこの <li> を差し替える。
+  # <ol> の直下に <turbo-frame> を挟まない
+  describe "サブタスクのマークアップ" do
+    def stream_template(target)
+      Nokogiri::HTML(response.body).at_css(%(turbo-stream[target="#{target}"] template))
+    end
+
+    it "S-4 の一覧で、<ol> の直下がサブタスクの <li> になる" do
+      get task_path(parent_task)
+
+      list = Nokogiri::HTML(response.body).at_css("ol#subtasks-list")
+      expect(list.element_children.map { [ it.name, it["id"] ] }).to eq [ [ "li", "task_#{subtask.id}" ] ]
+      expect(response.body).not_to include("<turbo-frame")
+    end
+
+    it "完了の切り替え・キャンセル（show）・編集で、差し替える内容が <li id=\"task_<id>\"> になる" do
+      patch toggle_status_task_subtask_path(parent_task, subtask), as: :turbo_stream
+      toggled = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      get task_subtask_path(parent_task, subtask), as: :turbo_stream
+      shown = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      get edit_task_subtask_path(parent_task, subtask), as: :turbo_stream
+      editing = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      [ toggled, shown, editing ].each do |doc|
+        root = doc.at_css("body").element_children
+        expect(root.map { [ it.name, it["id"] ] }).to eq [ [ "li", "task_#{subtask.id}" ] ]
+      end
+    end
+  end
 end

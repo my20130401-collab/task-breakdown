@@ -47,6 +47,13 @@ RSpec.describe "画面の表示（横断検査）" do
         expect(offenders.map { element_name(it) }).to be_empty
       end
 
+      # HTML として妥当なリスト（<ol>/<ul> の直下は <li> だけ。<turbo-frame> 等で包まない）
+      it "ol・ul の直下に li 以外の要素が無い" do
+        offenders = pages_document.css("ol > *, ul > *").reject { %w[li template script].include?(it.name) }
+
+        expect(offenders.map { "#{it.parent.name} > #{it.name}（#{element_name(it)}）" }).to be_empty
+      end
+
       # 入力はフォームの input / textarea で受け、contenteditable は使わない
       it "最初の表示に編集可能な要素（contenteditable）が無い" do
         expect(pages_document.css("[contenteditable]")).to be_empty
