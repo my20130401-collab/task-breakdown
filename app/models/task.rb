@@ -48,6 +48,14 @@ class Task < ApplicationRecord
     { completed: completed, total: total }
   end
 
+  # 最新の分解履歴（Decomposition.latest_first と同じ規則）。
+  # 一覧で includes(:decompositions) 済みのときは追加のクエリを出さずに読み込み済みの中から選ぶ
+  def latest_decomposition
+    return decompositions.max_by { [ it.created_at, it.id ] } if decompositions.loaded?
+
+    decompositions.latest_first.first
+  end
+
   # 完了・未完了の切り替えメソッド
   def complete!
     update!(status: :done, completed_at: Time.current)

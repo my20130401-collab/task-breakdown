@@ -18,6 +18,10 @@ class Decomposition < ApplicationRecord
     coarser: 2
   }
 
+  # スコープ
+  # 新しい順。作成日時が同じ（同じ秒に作った・テストで時刻を止めた）ときは、後から作った（id が大きい）方を先にする
+  scope :latest_first, -> { order(created_at: :desc, id: :desc) }
+
   # バリデーション
   # 空欄のまま保存されて意図しない不整合が起きないよう防ぐ
   validates :status, presence: true

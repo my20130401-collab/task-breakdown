@@ -84,4 +84,42 @@ RSpec.describe Decomposition do
       expect(decomposition.reload.status).to eq("failed")
     end
   end
+
+  # 最新の分解履歴は作成日時が同じでも一意に決める（作成日時 → id の降順）
+  describe ".latest_first / Task#latest_decomposition" do
+    let(:task) { create(:task) }
+
+    before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
+
+    it "作成日時が同じ分解履歴は、後から作った（id が大きい）方を最新とする" do
+      older = create(:decomposition, :failed, task:)
+      newer = create(:decomposition, task:, status: :pending)
+
+      expect(task.decompositions.latest_first.to_a).to eq [ newer, older ]
+      expect(task.latest_decomposition).to eq newer
+    end
+
+    it "作成日時が新しい方を、id より優先して最新とする" do
+      later = create(:decomposition, task:, created_at: 1.minute.from_now)
+      earlier = create(:decomposition, task:, created_at: 1.minute.ago)
+
+      expect(task.decompositions.latest_first.to_a).to eq [ later, earlier ]
+      expect(task.latest_decomposition).to eq later
+    end
+
+    it "読み込み済みの関連（includes）からも同じ規則で選ぶ" do
+      older = create(:decomposition, :failed, task:)
+      newer = create(:decomposition, task:, status: :pending)
+
+      loaded = Task.includes(:decompositions).find(task.id)
+
+      expect(loaded.decompositions).to be_loaded
+      expect(loaded.latest_decomposition).to eq newer
+      expect(older).not_to eq newer
+    end
+
+    it "分解履歴が無いときは nil" do
+      expect(task.latest_decomposition).to be_nil
+    end
+  end
 end

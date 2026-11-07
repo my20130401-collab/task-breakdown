@@ -10,7 +10,7 @@ class DecomposeTaskJob < ApplicationJob
     task = Task.find_by(id: task_id)
     next unless task
 
-    decomposition = task.decompositions.order(created_at: :desc).first
+    decomposition = task.latest_decomposition
     decomposition&.update!(status: :failed, error_message: error.message)
 
     job.send(:broadcast_decomposition_failure, task)
@@ -18,7 +18,7 @@ class DecomposeTaskJob < ApplicationJob
 
   def perform(task_id)
     task = Task.find(task_id)
-    decomposition = task.decompositions.where(status: :pending).order(created_at: :desc).first || task.decompositions.build
+    decomposition = task.decompositions.pending.latest_first.first || task.decompositions.build
 
     # 頭に :: を付けてトップレベルの TaskDecomposer を確実に参照させる
     decomposer = ::TaskDecomposer.new(task: task, decomposition: decomposition)

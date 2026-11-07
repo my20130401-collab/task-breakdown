@@ -80,7 +80,7 @@ RSpec.describe DecomposeTaskJob do
       error = StandardError.new("Connection refused")
 
       # retry_on do |job, error| のブロック処理を手動で直接呼び出して検証
-      latest_decomposition = task.decompositions.order(created_at: :desc).first
+      latest_decomposition = task.latest_decomposition
       latest_decomposition.update!(status: :failed, error_message: error.message)
       job.send(:broadcast_decomposition_failure, task)
 
@@ -96,6 +96,42 @@ RSpec.describe DecomposeTaskJob do
       decomposition.reload
       expect(decomposition.status).to eq("failed")
       expect(decomposition.error_message).to eq("Connection refused")
+    end
+  end
+
+  # ----------------------------------------------------------------
+  # 4. 最新の分解履歴の選び方（作成日時が同じでも一意）
+  # ----------------------------------------------------------------
+  describe "最新の分解履歴" do
+    # 外側で作った pending の履歴（decomposition）と、ここで作る履歴の作成日時をそろえる
+    before do
+      travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+      decomposition.update_columns(created_at: Time.current, updated_at: Time.current)
+    end
+
+    it "作成日時が同じ pending の履歴が複数あるとき、後から作った方を分解に使う" do
+      newer = create(:decomposition, task:, status: :pending)
+      used = []
+      allow(TaskDecomposer).to receive(:new).and_wrap_original do |original, **kwargs|
+        used << kwargs[:decomposition]
+        instance_double(TaskDecomposer, call: true)
+      end
+
+      described_class.perform_now(task.id)
+
+      expect(newer.created_at).to eq decomposition.created_at
+      expect(used).to eq [ newer ]
+    end
+
+    it "リトライ上限に達したとき、作成日時が同じでも後から作った履歴を失敗にする" do
+      newer = create(:decomposition, task:, status: :pending)
+      allow(TaskDecomposer).to receive(:new).and_raise(StandardError, "Connection refused")
+
+      perform_enqueued_jobs { described_class.perform_later(task.id) }
+
+      expect(newer.reload).to be_failed
+      expect(newer.error_message).to eq "Connection refused"
+      expect(decomposition.reload).to be_pending
     end
   end
 end
