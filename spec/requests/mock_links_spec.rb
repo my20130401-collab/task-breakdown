@@ -63,7 +63,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       Rails.application.routes.recognize_path(URI.parse(url).path, method:).values_at(:controller, :action).join("#")
     end
 
-    { "/login" => "mocks#login_submit", "/signup" => "mocks#signup_submit" }.each do |path, action|
+    { "/session/new" => "sessions#create", "/registration/new" => "registrations#create" }.each do |path, action|
       it "#{path} のフォームは POST で送信し、#{action} が受ける" do
         get path
         form = mock_document.at_css("form")
@@ -74,7 +74,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
     end
 
     it "S-2 の同意文の規約リンクは新しいタブで開き、opener を渡さない" do
-      get "/signup"
+      get "/registration/new"
       links = mock_document.css("form label a")
 
       expect(links.map { it["href"] }).to eq %w[/terms /privacy]
@@ -82,7 +82,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       expect(links.map { it["rel"].to_s.split }).to all(include("noopener"))
     end
 
-    %w[/login /signup /terms /privacy].each do |path|
+    %w[/session/new /registration/new /terms /privacy].each do |path|
       it "#{path} はサイドバーの無いログイン前のレイアウトで、ロゴは S-3 へ移る" do
         get path
 
