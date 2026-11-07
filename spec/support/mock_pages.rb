@@ -1,9 +1,9 @@
 # 横断検査（spec/requests/mock_*_spec.rb）で巡回する画面モックの URL と、検査用の HTML の読み方。
 module MockPages
-  # 全画面・全状態（S-4, S-5 は本実装へ移行したため除外）
+  # ログイン前の画面（S-1, S-2, S-6, S-7）
   PATHS = %w[
-    /signup
-    /login
+    /session/new
+    /registration/new
     /terms
     /privacy
   ].freeze
