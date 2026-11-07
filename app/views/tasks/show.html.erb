@@ -2,7 +2,7 @@
 
 <div class="flex min-h-screen flex-col" data-controller="completed-filter">
   <%# 共通ヘッダー（マイタスクへ戻る） %>
-  <%= render "mocks/content_header" do %>
+  <%= render "shared/content_header" do %>
     <%= link_to tasks_path, aria: { label: "マイタスクに戻る" },
                 class: "flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-ink" do %>
       <%= render "shared/icon", name: :chevron_left, class: "h-4 w-4" %>マイタスク
