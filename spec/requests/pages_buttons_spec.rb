@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# 横断検査: Pages::PATHS の全画面のボタンは「フォームの送信」か「Stimulus の操作」のどちらかで、
+# 横断検査: Pages::ALL の全画面（ログイン前・ログイン後）のボタンは「フォームの送信」か「Stimulus の操作」のどちらかで、
 # 押しても何も起きない無規約のボタンや、見た目だけのボタン（data-mock="noop"）が無い
 RSpec.describe "画面のボタン（横断検査）" do
   before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
@@ -11,9 +11,9 @@ RSpec.describe "画面のボタン（横断検査）" do
     end
   end
 
-  Pages::PATHS.each do |page_path|
-    describe page_path do
-      before { get page_path }
+  Pages::ALL.each do |page_name|
+    describe page_name do
+      before { get_page(page_name) }
 
       it "すべての <button> が送信・操作のいずれかに当たる" do
         violations = pages_document.css("button").reject { rule_of(it) }.map { "「#{element_name(it)}」" }
@@ -35,13 +35,15 @@ RSpec.describe "画面のボタン（横断検査）" do
     end
   end
 
-  # 規約・ポリシーの画面にはボタンが無いため、画面単位ではなく巡回全体で空集合を弾く
+  # 規約・ポリシーの画面にはボタンが無いため、画面単位ではなく巡回全体で空集合を弾く。
+  # 見た目だけのボタンが出やすいログイン後の画面（メニュー・完了チェック・再分解）は、それだけでも 1 件以上あることを確かめる
   it "巡回した画面の <button> が 1 件以上ある（検査が空集合で素通りしない）" do
-    count = Pages::PATHS.sum do |page_path|
-      get page_path
+    counts = Pages::ALL.index_with do |page_name|
+      get_page(page_name)
       pages_document.css("button").size
     end
 
-    expect(count).to be_positive
+    expect(counts.values.sum).to be_positive
+    expect(counts.values_at(*Pages::AUTHENTICATED_PAGES.keys)).to all(be_positive)
   end
 end
