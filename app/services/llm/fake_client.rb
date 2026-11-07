@@ -30,11 +30,26 @@ module Llm
     }.freeze
 
     # 分解を実行するメソッド（インターフェース）
+    # 期限は DEFAULT_RESPONSE の間隔を保ったまま、最初の手順が現在時刻の 1 時間後になるようにずらす
+    # （固定日時のままだと日が経つと過去になり、期限なしとして保存されてしまうため）
     # @param prompt [String] プロンプト文字列（Fake では内容は無視して固定値を返す）
+    # @param current_time [Time] 期限をずらす基準の現在時刻
     # @param options [Hash] オプション引数
     # @return [Hash] パース済みのレスポンス（シンボルキーの Hash）
-    def decompose(prompt:, **_options)
-      DEFAULT_RESPONSE
+    def decompose(prompt:, current_time: Time.current, **_options)
+      { subtasks: rebase_due_ats(DEFAULT_RESPONSE[:subtasks], current_time) }
+    end
+
+    private
+
+    def rebase_due_ats(subtasks, current_time)
+      base = Time.zone.iso8601(subtasks.first[:due_at])
+      start = current_time.in_time_zone.change(sec: 0) + 1.hour
+
+      subtasks.map do |subtask|
+        offset = Time.zone.iso8601(subtask[:due_at]) - base
+        subtask.merge(due_at: (start + offset).iso8601)
+      end
     end
   end
 end
