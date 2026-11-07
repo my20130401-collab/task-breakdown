@@ -256,6 +256,22 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_css("li#new_subtask_form")
       expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
     end
+
+    it "「タスクを追加」の入力欄をキャンセルすると、空状態がまた表示される" do
+      click_link "タスクを追加"
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+
+      within("li#new_subtask_form") { click_button "キャンセル" }
+
+      expect(page).to have_no_css("li#new_subtask_form")
+      expect(page).to have_css("[data-subtasks-empty='none']", visible: :visible, text: "サブタスクはまだありません")
+
+      # もう一度開いて閉じても同じ
+      click_link "タスクを追加"
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+      within("li#new_subtask_form") { click_button "キャンセル" }
+      expect(page).to have_css("[data-subtasks-empty='none']", visible: :visible)
+    end
   end
 
   # 全完了の空状態はタスク全体が完了したときだけ。日付タブで絞り込んだ手順がすべて完了しても出さない

@@ -6,12 +6,17 @@
   0 件のときは理由ごとに空状態を出し分ける（data-subtasks-empty）:
     none:     サブタスクが 1 件も無い（分解に失敗した、すべて削除した等）
     filtered: サブタスクはあるが、選んだ日付タブに該当するものが無い
-  「タスクを追加」で一覧に入力欄が入ったときは、application.css のルールで空状態を隠す
-  （そのため一覧の中に空白の文字を出さず、項目が無いときは :empty になるようにする）
+  「タスクを追加」で一覧に入力欄（<li>）が入っている間は、application.css のルール（ol が li を持つか）で空状態を隠す。
+  Turbo Stream の追加やキャンセルで一覧に空白の文字が残っても判定が変わらないよう、:empty には頼らない
 %>
-<% reason = task.children.exists? ? "filtered" : "none" %>
+<%# 表示する項目があるときは空状態を出さないので、理由を調べる問い合わせを省く %>
+<% reason = subtasks.any? || task.children.exists? ? "filtered" : "none" %>
 <div id="subtasks_list" class="mt-4">
-  <ol id="subtasks-list" class="space-y-2.5 empty:hidden"><% subtasks.each.with_index(1) do |subtask, index| %><%= render "tasks/subtasks/subtask", subtask: subtask, number: format("%02d", index) %><% end %></ol>
+  <ol id="subtasks-list" class="space-y-2.5">
+    <% subtasks.each.with_index(1) do |subtask, index| %>
+      <%= render "tasks/subtasks/subtask", subtask: subtask, number: format("%02d", index) %>
+    <% end %>
+  </ol>
 
   <% if reason == "none" %>
     <%= render "shared/empty_state", icon: :plus, title: "サブタスクはまだありません",
