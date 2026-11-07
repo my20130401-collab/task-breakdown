@@ -241,4 +241,20 @@ RSpec.describe "S-4 タスク詳細", :js do
       expect(page).to have_link("マイタスクへ", href: "/tasks")
     end
   end
+
+  describe "サブタスクが 1 件も無いときの空状態" do
+    let!(:parent_task) { create(:task, :decomposition_failed, user:, title: "親タスク") }
+
+    before { visit task_path(parent_task) }
+
+    it "「サブタスクはまだありません」を出し、「タスクを追加」で入力欄を開くと空状態を隠す" do
+      expect(page).to have_css("[data-subtasks-empty='none']", text: "サブタスクはまだありません")
+      expect(page).to have_no_text("該当するサブタスクはありません")
+
+      click_link "タスクを追加"
+
+      expect(page).to have_css("li#new_subtask_form")
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+    end
+  end
 end
