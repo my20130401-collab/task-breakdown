@@ -2,7 +2,7 @@ if ENV["COVERAGE"] != "false"
   require "simplecov"
   SimpleCov.start "rails" do
     skip "/spec/"
-    # モック段階のため既定は閾値なし。ロジック実装後に 80 へ戻す（MIN_COVERAGE=80 で指定可）
+    # カバレッジは参考値。CI で閾値チェックはしない（キックオフ方針）。手元で確かめるときは MIN_COVERAGE=80 で指定できる
     minimum_coverage ENV.fetch("MIN_COVERAGE", 0).to_i
   end
 end

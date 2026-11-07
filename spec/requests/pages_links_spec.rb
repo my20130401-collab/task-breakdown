@@ -1,6 +1,6 @@
 require "rails_helper"
 
-# 横断検査: Pages::PATHS の全画面のリンクと送信先が、アプリのルーティングで解決できる（死にリンクが無い）
+# 横断検査: Pages::ALL の全画面（ログイン前・ログイン後）のリンクと送信先が、アプリのルーティングで解決できる（死にリンクが無い）
 RSpec.describe "画面のリンクと送信先（横断検査）" do
   before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
 
@@ -28,9 +28,9 @@ RSpec.describe "画面のリンクと送信先（横断検査）" do
     false
   end
 
-  Pages::PATHS.each do |page_path|
-    describe page_path do
-      before { get page_path }
+  Pages::ALL.each do |page_name|
+    describe page_name do
+      before { get_page(page_name) }
 
       it "表示できる" do
         expect(response).to have_http_status(:ok)
@@ -82,13 +82,23 @@ RSpec.describe "画面のリンクと送信先（横断検査）" do
       expect(links.map { it["rel"].to_s.split }).to all(include("noopener"))
     end
 
-    %w[/session/new /registration/new /terms /privacy].each do |path|
+    Pages::PUBLIC_PATHS.each do |path|
       it "#{path} はサイドバーの無いログイン前のレイアウトで、ロゴは S-3 へ移る" do
         get path
 
         expect(pages_document.at_css("aside")).to be_nil
         expect(pages_document.at_css("main > a")["href"]).to eq "/"
         expect(pages_document.at_css("main > a").text).to include("Tasklet")
+      end
+    end
+
+    Pages::AUTHENTICATED_PAGES.each_key do |page_name|
+      it "#{page_name} はサイドバーのあるレイアウトで、ログアウトは DELETE /session" do
+        get_page(page_name)
+        logout = pages_document.at_css("aside a[role='menuitem']")
+
+        expect(logout.text.squish).to eq "ログアウト"
+        expect(destination(logout)).to eq [ "/session", :delete ]
       end
     end
   end

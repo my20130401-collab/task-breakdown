@@ -1,12 +1,12 @@
 require "rails_helper"
 
-# 横断検査: Pages::PATHS の全画面の <title>・デザイントークン外の値・id の一意性・繰り返し部品の読み上げ名
+# 横断検査: Pages::ALL の全画面（ログイン前・ログイン後）の <title>・デザイントークン外の値・id の一意性・繰り返し部品の読み上げ名
 RSpec.describe "画面の表示（横断検査）" do
   before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
 
-  Pages::PATHS.each do |page_path|
-    describe page_path do
-      before { get page_path }
+  Pages::ALL.each do |page_name|
+    describe page_name do
+      before { get_page(page_name) }
 
       it "画面ごとの <title>（「〜 | Tasklet」）を設定している" do
         title = pages_document.at_css("head title").text
@@ -37,6 +37,27 @@ RSpec.describe "画面の表示（横断検査）" do
       it "最初の表示に編集可能な要素（contenteditable）が無い" do
         expect(pages_document.css("[contenteditable]")).to be_empty
       end
+    end
+  end
+
+  # 巡回の準備（Pages::AUTHENTICATED_PAGES）が狙った状態の画面を開いているか。ずれると検査が別の画面に当たる
+  describe "ログイン後の巡回データ" do
+    def open(page_name)
+      get_page(page_name)
+      pages_document
+    end
+
+    it "S-4 は分解中・分解完了・分解失敗・全完了の 4 状態を開く" do
+      docs = Pages::AUTHENTICATED_PAGES.keys.grep(/S-4/).map { open(it) }
+
+      expect(docs.map { it.at_css("[data-decomposition-status]")["data-decomposition-status"] }).to eq %w[decomposing done failed done]
+      expect(docs.map { it.css("[data-subtask-card-target='check']").size }).to eq [ 0, 3, 0, 2 ]
+      expect(docs.last.at_css("[data-completed-filter-target='empty']")["hidden"]).to be_nil
+    end
+
+    it "S-5 はデータありと 0 件の両方を開く" do
+      expect(open("/tasks（S-5 マイタスク。データあり）").css("li[data-done]").size).to eq 4
+      expect(open("/tasks（S-5 マイタスク。0 件）").at_css("[data-my-tasks-empty]")).to be_present
     end
   end
 
