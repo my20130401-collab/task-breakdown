@@ -118,6 +118,14 @@ RSpec.describe Decomposition do
       expect(older).not_to eq newer
     end
 
+    it "読み込み済みの関連に未保存の履歴が混ざっても例外にせず、未保存の履歴を最新とする" do
+      create(:decomposition, :failed, task:)
+      loaded = Task.includes(:decompositions).find(task.id)
+      built = loaded.decompositions.build(status: :pending, request_payload: { prompt: "x" })
+
+      expect(loaded.latest_decomposition).to eq built
+    end
+
     it "分解履歴が無いときは nil" do
       expect(task.latest_decomposition).to be_nil
     end

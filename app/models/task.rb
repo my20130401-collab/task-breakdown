@@ -51,7 +51,8 @@ class Task < ApplicationRecord
   # 最新の分解履歴（Decomposition.latest_first と同じ規則）。
   # 一覧で includes(:decompositions) 済みのときは追加のクエリを出さずに読み込み済みの中から選ぶ
   def latest_decomposition
-    return decompositions.max_by { [ it.created_at, it.id ] } if decompositions.loaded?
+    # 未保存の履歴（created_at・id が nil）は今作ったものとして最新側に寄せる（nil との比較で例外にしない）
+    return decompositions.max_by { [ it.created_at || Time.current, it.id || Float::INFINITY ] } if decompositions.loaded?
 
     decompositions.latest_first.first
   end
