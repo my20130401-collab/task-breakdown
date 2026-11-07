@@ -107,10 +107,11 @@ module Pages
   end
 
 
-  # S-5: 日付グループが複数あり、進捗あり・進捗なし（—）・全完了・期限なしの行を含む
+  # S-5: 日付グループが複数あり、進捗あり・進捗なし（—）・全完了・期限なし・分解中・分解失敗の行を含む
   def tasks_with_data_path(user)
     FactoryBot.create(:task, :decomposed, user:, title: "見積書を提出する")
     FactoryBot.create(:task, :decomposing, user:, title: "週報を書く", due_at: 2.days.from_now)
+    FactoryBot.create(:task, :decomposition_failed, user:, title: "歓迎会を企画する", due_at: 2.days.from_now)
     FactoryBot.create(:task, :all_subtasks_done, user:, title: "経費精算の締め確認", due_at: 3.days.from_now)
     FactoryBot.create(:task, :without_due_at, user:, title: "資格試験の学習計画を立てる")
     tasks_path

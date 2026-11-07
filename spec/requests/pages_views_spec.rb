@@ -77,7 +77,9 @@ RSpec.describe "画面の表示（横断検査）" do
     end
 
     it "S-5 はデータありと 0 件の両方を開く" do
-      expect(open("/tasks（S-5 マイタスク。データあり）").css("li[data-done]").size).to eq 4
+      with_data = open("/tasks（S-5 マイタスク。データあり）")
+      expect(with_data.css("li[data-done]").size).to eq 5
+      expect(with_data.css("li[data-done] [data-decomposition-status]").map { it["data-decomposition-status"] }).to include("decomposing", "failed")
       expect(open("/tasks（S-5 マイタスク。0 件）").at_css("[data-my-tasks-empty]")).to be_present
     end
   end

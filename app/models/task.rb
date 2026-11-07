@@ -56,6 +56,15 @@ class Task < ApplicationRecord
     decompositions.latest_first.first
   end
 
+  # 分解ステータス（shared/_decomposition_status の status）。S-4 の見出し上と S-5 の行に出す。
+  # 分解履歴が無くサブタスクも無い（AI 分解の導入前に作ったタスク等）ときは、再分解できるよう失敗扱いにする
+  def decomposition_status
+    latest = latest_decomposition
+    return :failed if latest&.failed? || (latest.nil? && children.empty?)
+
+    latest&.pending? ? :decomposing : :done
+  end
+
   # 完了・未完了の切り替えメソッド
   def complete!
     update!(status: :done, completed_at: Time.current)

@@ -9,16 +9,15 @@
     <% end %>
   <% end %>
 
-  <% latest_decomposition = @task.latest_decomposition %>
-  <%# 分解履歴がなくサブタスクもない（AI 分解の導入前に作ったタスク等）ときは、再分解できるよう失敗扱いにする %>
-  <% is_failed = latest_decomposition&.failed? || (latest_decomposition.nil? && @task.children.empty?) %>
-  <% is_pending = latest_decomposition&.pending? %>
+  <% decomposition_status = @task.decomposition_status %>
+  <% is_failed = decomposition_status == :failed %>
+  <% is_pending = decomposition_status == :decomposing %>
 
   <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]">
     <%# 分解ステータスとメニュー %>
     <div class="flex items-center justify-between">
       <div id="<%= "decomposition_status_#{@task.id}" %>">
-        <%= render "shared/decomposition_status", status: is_failed ? :failed : (is_pending ? :decomposing : :done) %>
+        <%= render "shared/decomposition_status", status: decomposition_status %>
       </div>
       <%= render "shared/menu", id: "task-menu", label: "「#{@task.title}」のメニュー",
                                 items: [ { label: "編集", href: edit_task_path(@task) },

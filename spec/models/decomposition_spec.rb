@@ -122,4 +122,41 @@ RSpec.describe Decomposition do
       expect(task.latest_decomposition).to be_nil
     end
   end
+
+  # S-4 の見出し上と S-5 の行に出す分解ステータス（最新の分解履歴から決める）
+  describe "Task#decomposition_status" do
+    let(:task) { create(:task) }
+
+    before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
+
+    it "最新の分解履歴が pending なら分解中" do
+      create(:decomposition, :failed, task:)
+      create(:decomposition, task:, status: :pending)
+
+      expect(task.decomposition_status).to eq :decomposing
+    end
+
+    it "最新の分解履歴が failed なら分解失敗" do
+      create(:decomposition, task:, status: :pending, created_at: 1.minute.ago)
+      create(:decomposition, :failed, task:)
+
+      expect(task.decomposition_status).to eq :failed
+    end
+
+    it "最新の分解履歴が succeeded なら分解完了" do
+      create(:decomposition, :succeeded, task:)
+
+      expect(task.decomposition_status).to eq :done
+    end
+
+    it "分解履歴もサブタスクも無いときは、再分解できるよう分解失敗として扱う" do
+      expect(task.decomposition_status).to eq :failed
+    end
+
+    it "分解履歴が無くてもサブタスクがあれば分解完了" do
+      create(:task, :subtask, parent: task)
+
+      expect(task.reload.decomposition_status).to eq :done
+    end
+  end
 end

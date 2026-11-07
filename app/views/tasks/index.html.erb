@@ -36,6 +36,7 @@
               <% number += 1 %>
               <% progress = task.progress %>
               <% done = done_of.call(task) %>
+              <% decomposition_status = task.decomposition_status %>
               <li class="relative flex items-center gap-4 rounded-xl border border-line bg-white px-5 py-5 transition hover:shadow-card has-[>a:focus-visible]:ring-2 has-[>a:focus-visible]:ring-brand-dot"
                   data-done="<%= done %>" <%= "data-hidden-by-done" if done %>>
                 <%= link_to task_path(task),
@@ -45,6 +46,10 @@
                       <span class="flex items-center gap-1 text-2xs text-muted" data-row-due>
                         <%= render "shared/icon", name: :calendar, class: "h-3 w-3" %><%= due_time_tag(task.due_at) %>
                       </span>
+                      <%# 分解中・分解失敗のときだけ出す（分解完了は省略する） %>
+                      <% unless decomposition_status == :done %>
+                        <%= render "shared/decomposition_status", status: decomposition_status %>
+                      <% end %>
                     </div>
                     <p class="<%= class_names("mt-2.5 font-serif text-[17px] font-bold group-hover:text-brand", "text-muted line-through": done) %>">
                       <%= task.title %>

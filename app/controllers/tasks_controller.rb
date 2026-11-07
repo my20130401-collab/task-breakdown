@@ -8,7 +8,7 @@ class TasksController < ApplicationController
 
   # マイタスク一覧（S-5）の表示
   def index
-    tasks = Current.user.tasks.roots.ordered_by_due.includes(:children)
+    tasks = Current.user.tasks.roots.ordered_by_due.includes(:children, :decompositions)
     @grouped_tasks = tasks.group_by { |task| due_label(task.due_at, date_only: true) }
   end
 
