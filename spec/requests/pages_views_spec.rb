@@ -33,6 +33,15 @@ RSpec.describe "画面の表示（横断検査）" do
         expect(names.tally.select { |_, count| count > 1 }.keys).to be_empty
       end
 
+      # タブのセマンティクスを名乗るなら子はすべて role="tab" と aria-selected を持つ（リンクの並びは nav で表す）
+      it "role=tablist の子がすべて role=tab と aria-selected を持つ" do
+        offenders = pages_document.css("[role='tablist'] > *").reject do
+          it["role"] == "tab" && %w[true false].include?(it["aria-selected"])
+        end
+
+        expect(offenders.map { element_name(it) }).to be_empty
+      end
+
       # 入力はフォームの input / textarea で受け、contenteditable は使わない
       it "最初の表示に編集可能な要素（contenteditable）が無い" do
         expect(pages_document.css("[contenteditable]")).to be_empty
