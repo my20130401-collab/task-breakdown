@@ -1,7 +1,7 @@
 <%#
   親タスクの進捗。「n/m 完了」とプログレスバー。サブタスクが無い（total 0）ときは「—」だけを出す（バーは hidden）。
   バーの幅は 100% を上限にする。サブタスクがあるときはルートが role="progressbar"（aria-valuenow / aria-valuemax）になる。
-  画面上で完了数が変わる S-4 では subtasks_controller が同じ規則で書き換える（data-task-progress-* が目印）
+  S-4 ではサブタスクを操作するたびにサーバが tasks/_progress（この部品）を Turbo Stream で差し替える
 %>
 <% aria = total.positive? ? { label: "進捗", valuemin: 0, valuenow: done, valuemax: total } : {} %>
 <%= tag.div data: { task_progress: "" }, role: ("progressbar" if total.positive?), aria: do %>
