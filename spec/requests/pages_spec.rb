@@ -39,7 +39,8 @@ RSpec.describe "利用規約・プライバシーポリシー" do
       expect(document.at_css("head title").text).to eq "#{title} | Tasklet"
       expect(document.at_css("h1").text.squish).to eq title
       expect(document.text).to include(eyebrow)
-      expect(document.at_css("a", text: "会員登録に戻る")["href"]).to eq new_registration_path
+      back = document.css("a").find { it.text.squish == "会員登録に戻る" }
+      expect(back&.[]("href")).to eq new_registration_path
       expect(document.at_css("aside")).to be_nil
     end
 
