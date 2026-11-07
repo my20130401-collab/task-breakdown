@@ -152,17 +152,19 @@ $ docker compose up -d
 
 ### 3-4. ブラウザで開く
 
-http://localhost:3000 を開き、「今日は何に取り組みますか？」の画面が表示されれば成功です。
+http://localhost:3000 を開き、ログイン画面（「おかえりなさい」）が表示されれば成功です。「会員登録」から自分用のアカウントを作ると、「今日は何に取り組みますか？」の画面に移ります（手元のデータベースに保存されるだけで、メールは送られません）。
 
-| 画面 | URL |
-|---|---|
-| タスクを作る | http://localhost:3000/ |
-| マイタスク | http://localhost:3000/tasks |
-| タスク詳細 | http://localhost:3000/tasks/sample |
-| 会員登録 | http://localhost:3000/signup |
-| ログイン | http://localhost:3000/login |
+| 画面 | URL | ログイン |
+|---|---|---|
+| タスクを作る（ホーム） | http://localhost:3000/ | 必要 |
+| マイタスク | http://localhost:3000/tasks | 必要 |
+| タスク詳細 | http://localhost:3000/tasks/:id（マイタスクからタスクを選んで開く） | 必要 |
+| 会員登録 | http://localhost:3000/registration/new | 不要 |
+| ログイン | http://localhost:3000/session/new | 不要 |
+| 利用規約 | http://localhost:3000/terms | 不要 |
+| プライバシーポリシー | http://localhost:3000/privacy | 不要 |
 
-> 現在は**画面モック**の段階です。画面は固定のサンプルデータで表示しており、保存や AI 分解はまだ動きません。
+AI 分解は、リポジトリ直下の `.env` に `OPENAI_API_KEY=<API キー>` を書いて `docker compose up -d` し直すと OpenAI の API で動き、`.env` が無ければ API を使わない固定の分解（「見積もり作成」の 3 件）で動きます（`.env` はコミットしません）。
 
 ### 3-5. 止める・再開する
 
@@ -190,7 +192,7 @@ $ docker compose run --rm web bin/rubocop
 ファイルを 1 つだけ実行したいときは、パスを付けます。
 
 ```bash
-$ docker compose run --rm web bundle exec rspec spec/requests/mocks_spec.rb
+$ docker compose run --rm web bundle exec rspec spec/requests/tasks_spec.rb
 ```
 
 ---
@@ -252,7 +254,7 @@ $ docker compose up -d     # アプリを起動する
 
 ### 環境を作り直す
 
-> **注意:** 次のコマンドは手元のデータベースの中身を消します（画面モック段階では消えて困るデータはありません）。
+> **注意:** 次のコマンドは手元のデータベースの中身を消します（手元で作ったアカウントやタスクもすべて消えます）。
 
 ```bash
 $ docker compose down -v

@@ -3,7 +3,7 @@
 「見積もり作成」「起案書作成」のような大まかなタスクを入力すると、AI が実行できる手順（サブタスク）に分解し、期限から逆算して進められるようにするアプリです。
 仕事の進め方や所要時間をまだ予測しにくい新入社員が、ベテランのように段取りを組めることを目指しています。
 
-> 現在は**画面モック**の段階です。画面は固定のサンプルデータで表示しており、保存や AI 分解はまだ行いません。
+会員登録してタスクを入力すると、AI（OpenAI の API）が 3〜8 件程度のサブタスクに分解して保存します。分解した手順は追加・編集・削除でき、完了にすると一覧から隠れます。
 
 ## はじめての方へ
 
@@ -35,17 +35,19 @@ docker compose run --rm web bin/rails db:prepare
 docker compose up -d
 ```
 
-http://localhost:3000 を開きます。停止は `docker compose stop` です。
+http://localhost:3000 を開くとログイン画面が表示されます。最初は「会員登録」からアカウントを作ってください。停止は `docker compose stop` です。
 
-| 画面 | URL |
-|---|---|
-| タスクを作る | http://localhost:3000/ |
-| マイタスク | http://localhost:3000/tasks |
-| タスク詳細 | http://localhost:3000/tasks/sample |
-| 会員登録 | http://localhost:3000/signup |
-| ログイン | http://localhost:3000/login |
-| 利用規約 | http://localhost:3000/terms |
-| プライバシーポリシー | http://localhost:3000/privacy |
+| 画面 | URL | ログイン |
+|---|---|---|
+| タスクを作る（ホーム） | http://localhost:3000/ | 必要 |
+| マイタスク | http://localhost:3000/tasks | 必要 |
+| タスク詳細 | http://localhost:3000/tasks/:id（マイタスクからタスクを選んで開く） | 必要 |
+| 会員登録 | http://localhost:3000/registration/new | 不要 |
+| ログイン | http://localhost:3000/session/new | 不要 |
+| 利用規約 | http://localhost:3000/terms | 不要 |
+| プライバシーポリシー | http://localhost:3000/privacy | 不要 |
+
+AI 分解に OpenAI の API を使うときは、リポジトリ直下の `.env` に `OPENAI_API_KEY=<API キー>` を書いてから `docker compose up -d` します。API キーが無いときは、固定の手順（「見積もり作成」の 3 件）を返すテスト用の分解で動きます。
 
 ## よく使うコマンド
 
@@ -58,6 +60,7 @@ Rails のコマンドは、パソコンで直接ではなく `docker compose run
 | セキュリティ診断 | `docker compose run --rm web bin/brakeman` |
 | ログを見る | `docker compose logs -f web` |
 | CSS を作り直す | `docker compose run --rm css bin/rails tailwindcss:build` |
+| AI 分解の品質評価（OpenAI の API キーが必要） | `docker compose run --rm web bin/rails eval:decompose` |
 
 ほかのコマンドとトラブル対処は [開発環境の構築](docs/dev/setup.md#6-よく使うコマンド) にまとめています。
 
@@ -69,9 +72,10 @@ Rails のコマンドは、パソコンで直接ではなく `docker compose run
 |---|---|
 | [キックオフ資料](docs/kickoff.md) | 目的とゴール、チームの役割、スケジュール、技術スタック、開発フロー、テスト方針、タスク管理、コミュニケーション |
 | [要件定義](docs/requirements.md) | ペルソナ、ユースケース、ユーザーストーリー、受入条件 |
-| [画面設計](docs/screens.md) | 画面一覧、画面遷移図、各画面の要素、画面モックで動く操作 |
+| [画面設計](docs/screens.md) | 画面一覧、画面遷移図、各画面の要素と操作 |
 | [データ設計](docs/data-model.md) | ER 図、テーブル定義 |
 | [AI タスク分解の設計](docs/ai-decomposition.md) | 処理の流れ、プロンプト、出力形式、失敗時の挙動、品質評価 |
+| [運用手順書](docs/deploy.md) | デプロイ、本番の環境変数、無料枠の制限とスリープ対策 |
 
 ### 開発者向け
 
