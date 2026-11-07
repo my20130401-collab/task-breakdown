@@ -60,6 +60,17 @@ RSpec.describe Llm::Client do
       expect(result[:subtasks].size).to eq(3)
       expect(result[:subtasks].first[:title]).to eq("仕入れ先に見積もりを依頼する")
     end
+
+    it "期限は固定値の間隔を保ったまま、最初の手順が現在時刻の 1 時間後になるようにずらして返すこと" do
+      travel_to Time.zone.parse("2026-11-07 10:20:30") do
+        result = client.decompose(prompt: "テストプロンプト")
+
+        expect(result[:subtasks].pluck(:due_at)).to eq %w[
+          2026-11-07T11:20:00+09:00 2026-11-07T12:20:00+09:00 2026-11-07T13:20:00+09:00
+        ]
+      end
+      expect(Llm::FakeClient::DEFAULT_RESPONSE[:subtasks].first[:due_at]).to eq "2026-10-26T15:00:00+09:00"
+    end
   end
 
   # ----------------------------------------------------------------
