@@ -2,12 +2,8 @@
 
 <%# 1. 該当サブタスクの行を更新 %>
 <%= turbo_stream.replace @subtask do %>
-  <%= render "tasks/subtasks/subtask", subtask: @subtask, number: @number %>
+  <%= render "tasks/subtasks/subtask", subtask: @subtask, number: format("%02d", @number) %>
 <% end %>
 
 <%# 2. 親タスクの進捗バーを更新 %>
-<%= turbo_stream.replace "task_progress_#{@task.id}" do %>
-  <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
-    <%= render "shared/task_progress", done: @task.children.count(&:done?), total: @task.children.size %>
-  </div>
-<% end %>
+<%= turbo_stream.replace "task_progress_#{@task.id}", partial: "tasks/progress", locals: { task: @task } %>

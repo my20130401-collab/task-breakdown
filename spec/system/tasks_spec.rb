@@ -29,6 +29,8 @@ RSpec.describe "タスク機能", :js do
       # 詳細モック画面へ遷移し、完了メッセージが表示されること
       expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
+      created_task = Task.find_by!(title: "営業用の見積もりを作成する")
+      expect(page).to have_current_path(task_path(created_task))
     end
 
     it "タイトルを入力してショートカットキー（Ctrl/Cmd + Enter）でタスクを作成できる" do
@@ -41,6 +43,8 @@ RSpec.describe "タスク機能", :js do
       # 詳細モック画面へ遷移し、完了メッセージが表示されること
       expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
+      created_task = Task.find_by!(title: "ショートカット送信のテスト")
+      expect(page).to have_current_path(task_path(created_task))
     end
   end
 

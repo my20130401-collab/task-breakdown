@@ -1,6 +1,7 @@
 <% content_for :title, "#{@task.title} | Tasklet" %>
 
 <div class="flex min-h-screen flex-col" data-controller="completed-filter">
+  <%# 共通ヘッダー（マイタスクへ戻る） %>
   <%= render "mocks/content_header" do %>
     <%= link_to tasks_path, aria: { label: "マイタスクに戻る" },
                 class: "flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-ink" do %>
@@ -8,42 +9,45 @@
     <% end %>
   <% end %>
 
-  <% status = :done %>
-  <% done = true %>
+  <% latest_decomposition = @task.decompositions.order(created_at: :desc).first %>
+  <%# 分解履歴がなくサブタスクもない（AI 分解の導入前に作ったタスク等）ときは、再分解できるよう失敗扱いにする %>
+  <% is_failed = latest_decomposition&.failed? || (latest_decomposition.nil? && @task.children.empty?) %>
+  <% is_pending = latest_decomposition&.pending? %>
 
   <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]">
+    <%# 分解ステータスとメニュー %>
     <div class="flex items-center justify-between">
-      <%= render "shared/decomposition_status", status: status %>
+      <div id="<%= "decomposition_status_#{@task.id}" %>">
+        <%= render "shared/decomposition_status", status: is_failed ? :failed : (is_pending ? :decomposing : :done) %>
+      </div>
       <%= render "shared/menu", id: "task-menu", label: "「#{@task.title}」のメニュー",
-                                items: [ { label: "編集", href: edit_task_path(@task) }, { label: "削除", danger: true } ] %>
+                                items: [ { label: "編集", href: edit_task_path(@task) },
+                                         { label: "削除", href: task_path(@task), method: :delete, data: { turbo_confirm: "本当に削除しますか？" }, danger: true } ] %>
     </div>
-    <h1 class="mt-5 font-serif text-[40px] font-bold leading-[1.45] tracking-tight"><%= @task.title %></h1>
-    <p class="mt-4 text-[11px] text-muted">
-      AI が実行しやすい手順に分解しました。内容は自由に編集できます。
-    </p>
 
+    <%# 親タスクタイトル %>
+    <h1 class="mt-5 font-serif text-[40px] font-bold leading-[1.45] tracking-tight"><%= @task.title %></h1>
+
+    <%# 期限と進捗 %>
     <div class="mt-6 flex items-center gap-8">
       <p class="flex items-center gap-1.5 text-2xs text-muted" data-parent-due>
-        <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
-        <%= due_time_tag(@task.due_at) || "期限なし" %>
+        <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %><%= due_time_tag(@task.due_at) %>
       </p>
-      <div id="task_progress_<%= @task.id %>" class="w-40" data-subtasks-target="progress">
-        <%= render "shared/task_progress", done: @task.children.count(&:done?), total: @task.children.size %>  
-      </div>
+      <%= render "tasks/progress", task: @task %>
     </div>
 
-    <%= render "tasks/subtasks/content", task: @task %>
+    <%# Turbo Stream 受信アンテナ（AI 分解ジョブの結果を受け取る） %>
+    <%= turbo_stream_from @task %>
 
-      <%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
-                                       body: "完了した手順は「完了済みを表示」で確認できます。",
-                                       action: { label: "マイタスクへ", href: tasks_path },
-                                       data: { completed_filter_target: "empty" },
-                                       hidden: !(@task.children.any? && @task.children.all?(&:done?)) %>
-                                       
-    <%= link_to new_task_subtask_path(@task), data: { turbo_stream: true },
-            class: "mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-dashed py-4 text-[11px] font-semibold text-muted hover:bg-white" do %>
-      <%= render "shared/icon", name: :plus, class: "h-3.5 w-3.5" %>
-      タスクを追加
-    <% end %>
+    <%# 分解状態に応じた切り替えエリア %>
+    <div id="<%= "decomposition_content_#{@task.id}" %>">
+      <% if is_failed %>
+        <%= render "tasks/decomposition_failed", task: @task %>
+      <% elsif is_pending %>
+        <%= render "tasks/decomposition_pending", task: @task %>
+      <% else %>
+        <%= render "tasks/subtasks_content", task: @task %>
+      <% end %>
+    </div>
   </div>
 </div>
