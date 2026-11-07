@@ -1,0 +1,7 @@
+<div id="subtasks_area">
+  <%# レビュー指摘: ここで必ず全サブタスクを期限順で取得し直す %>
+  <% ordered_subtasks = task.children.ordered_by_due %>
+
+  <%= render "tasks/subtasks/tabs", task: task, subtasks: ordered_subtasks, current_filter: "all" %>
+  <%= render "tasks/subtasks/list", subtasks: ordered_subtasks %>
+</div>

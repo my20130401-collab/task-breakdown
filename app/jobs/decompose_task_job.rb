@@ -35,19 +35,33 @@ class DecomposeTaskJob < ApplicationJob
   private
 
   def broadcast_decomposition_success(task)
-    Turbo::StreamsChannel.broadcast_replace_to(
-      task,
-      target: "decomposition_content_#{task.id}",
-      partial: "tasks/subtasks_content",
-      locals: { task: task }
-    )
+    broadcast_result(task, status: :done, partial: "tasks/subtasks_content")
   end
 
   def broadcast_decomposition_failure(task)
-    Turbo::StreamsChannel.broadcast_replace_to(
+    broadcast_result(task, status: :failed, partial: "tasks/decomposition_failed")
+  end
+
+  # 分解エリアの中身（update: 枠の id を残し、再分解後も同じ枠に配信できるようにする）と、
+  # 見出し上の分解ステータス・進捗をあわせて更新する
+  def broadcast_result(task, status:, partial:)
+    task.reload
+    Turbo::StreamsChannel.broadcast_update_to(
       task,
       target: "decomposition_content_#{task.id}",
-      partial: "tasks/decomposition_failed",
+      partial: partial,
+      locals: { task: task }
+    )
+    Turbo::StreamsChannel.broadcast_update_to(
+      task,
+      target: "decomposition_status_#{task.id}",
+      partial: "shared/decomposition_status",
+      locals: { status: status }
+    )
+    Turbo::StreamsChannel.broadcast_replace_to(
+      task,
+      target: "task_progress_#{task.id}",
+      partial: "tasks/progress",
       locals: { task: task }
     )
   end

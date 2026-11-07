@@ -7,3 +7,7 @@
 <%# 再分解実行ボタン %>
 <%= button_to "再分解する", redecompose_task_path(task), method: :post,
               class: "mb-10 mt-6 rounded-lg bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover cursor-pointer" %>
+
+<%# AI が使えないときも、手動でサブタスクを追加・編集できる（可用性の要件） %>
+<%= render "tasks/subtasks/content", task: task %>
+<%= render "tasks/subtasks/add_button", task: task %>

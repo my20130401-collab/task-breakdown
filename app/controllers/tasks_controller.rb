@@ -60,7 +60,8 @@ class TasksController < ApplicationController
       redirect_to tasks_path, notice: t(".success")
     else
       flash.now[:alert] = t(".failure")
-      render :edit, status: :unprocessable_entity
+      # Turbo Stream で送信された場合も、編集画面（HTML）を描き直す
+      render :edit, formats: :html, status: :unprocessable_entity
     end
   end
 
@@ -78,6 +79,7 @@ class TasksController < ApplicationController
   end
 
   def task_params
-    params.expect(task: [ :title, :due_at ])
+    # parent_id は受け付けない（親タスクを別タスクの子にしたり、自分自身を親にしたりできてしまうため）
+    params.require(:task).permit(:title, :due_at, :description)
   end
 end

@@ -14,13 +14,15 @@
   <% is_failed = latest_decomposition&.failed? || (latest_decomposition.nil? && @task.children.empty?) %>
   <% is_pending = latest_decomposition&.pending? %>
 
-  <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]" data-controller="subtasks">
+  <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]">
     <%# 分解ステータスとメニュー %>
     <div class="flex items-center justify-between">
-      <% status_symbol = is_failed ? :failed : (is_pending ? :decomposing : :done) %>
-      <%= render "shared/decomposition_status", status: status_symbol %>
+      <div id="<%= "decomposition_status_#{@task.id}" %>">
+        <%= render "shared/decomposition_status", status: is_failed ? :failed : (is_pending ? :decomposing : :done) %>
+      </div>
       <%= render "shared/menu", id: "task-menu", label: "「#{@task.title}」のメニュー",
-                                items: [ { label: "編集" }, { label: "再分解" }, { label: "削除", danger: true } ] %>
+                                items: [ { label: "編集", href: edit_task_path(@task) },
+                                         { label: "削除", href: task_path(@task), method: :delete, data: { turbo_confirm: "本当に削除しますか？" }, danger: true } ] %>
     </div>
 
     <%# 親タスクタイトル %>
@@ -31,12 +33,10 @@
       <p class="flex items-center gap-1.5 text-2xs text-muted" data-parent-due>
         <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %><%= due_time_tag(@task.due_at) %>
       </p>
-      <div class="w-40" data-subtasks-target="progress">
-        <%= render "shared/task_progress", done: @task.children.count(&:done?), total: @task.children.size %>
-      </div>
+      <%= render "tasks/progress", task: @task %>
     </div>
 
-    <%# Turbo Stream 受信アンテナ %>
+    <%# Turbo Stream 受信アンテナ（AI 分解ジョブの結果を受け取る） %>
     <%= turbo_stream_from @task %>
 
     <%# 分解状態に応じた切り替えエリア %>

@@ -1,0 +1,26 @@
+<%
+  today = Time.zone.today
+  tomorrow = Time.zone.tomorrow
+  # サブタスク群から日付を抽出し、今日・明日を除外して昇順ソート（M/Dタブの動的生成）
+  other_dates = subtasks.filter_map { |st| st.due_at&.to_date }.uniq.reject { |d| d == today || d == tomorrow }.sort
+%>
+<div id="subtask_tabs" class="mt-12 flex overflow-x-auto border-b border-line text-[11px] font-semibold no-scrollbar" role="tablist">
+  <%= link_to "すべて", task_subtasks_path(task, filter: "all"),
+        class: class_names("-mb-px border-b-2 px-4 py-3", "border-brand text-brand": current_filter == "all", "border-transparent text-muted hover:text-ink": current_filter != "all"),
+        data: { turbo_stream: true } %>
+
+  <%= link_to "今日", task_subtasks_path(task, filter: "today"),
+        class: class_names("-mb-px border-b-2 px-4 py-3", "border-brand text-brand": current_filter == "today", "border-transparent text-muted hover:text-ink": current_filter != "today"),
+        data: { turbo_stream: true } %>
+
+  <%= link_to "明日", task_subtasks_path(task, filter: "tomorrow"),
+        class: class_names("-mb-px border-b-2 px-4 py-3", "border-brand text-brand": current_filter == "tomorrow", "border-transparent text-muted hover:text-ink": current_filter != "tomorrow"),
+        data: { turbo_stream: true } %>
+
+  <% other_dates.each do |date| %>
+    <% date_str = date.to_s %>
+    <%= link_to date.strftime("%-m/%-d"), task_subtasks_path(task, filter: date_str),
+          class: class_names("-mb-px border-b-2 px-4 py-3", "border-brand text-brand": current_filter == date_str, "border-transparent text-muted hover:text-ink": current_filter != date_str),
+          data: { turbo_stream: true } %>
+  <% end %>
+</div>

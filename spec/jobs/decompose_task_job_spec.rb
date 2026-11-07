@@ -12,6 +12,7 @@ RSpec.describe DecomposeTaskJob do
   let!(:decomposition) { create(:decomposition, task: task, status: :pending) }
 
   before do
+    allow(Turbo::StreamsChannel).to receive(:broadcast_update_to)
     allow(Turbo::StreamsChannel).to receive(:broadcast_replace_to)
   end
 
@@ -27,8 +28,8 @@ RSpec.describe DecomposeTaskJob do
       # ジョブをその場で即時実行
       described_class.perform_now(task.id)
 
-      # 画面の枠（target）に向けて subtasks_content が replace 配信されたことを検証
-      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
+      # 画面の枠（target）に向けて subtasks_content が update 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_update_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/subtasks_content",
@@ -48,8 +49,8 @@ RSpec.describe DecomposeTaskJob do
 
       described_class.perform_now(task.id)
 
-      # 画面の枠（target）に向けて decomposition_failed が replace 配信されたことを検証
-      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
+      # 画面の枠（target）に向けて decomposition_failed が update 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_update_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/decomposition_failed",
@@ -83,8 +84,8 @@ RSpec.describe DecomposeTaskJob do
       latest_decomposition.update!(status: :failed, error_message: error.message)
       job.send(:broadcast_decomposition_failure, task)
 
-      # 失敗通知が画面へ replace 配信されたことを検証
-      expect(Turbo::StreamsChannel).to have_received(:broadcast_replace_to).with(
+      # 失敗通知が画面へ update 配信されたことを検証
+      expect(Turbo::StreamsChannel).to have_received(:broadcast_update_to).with(
         task,
         target: "decomposition_content_#{task.id}",
         partial: "tasks/decomposition_failed",

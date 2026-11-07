@@ -1,22 +1,15 @@
-<%# 完了時の説明文 %>
+<%# 分解完了時の説明文 %>
 <p class="mt-4 text-[11px] text-muted">
   AI が実行しやすい手順に分解しました。内容は自由に編集できます。
 </p>
 
-<%# サブタスク一覧エリア %>
-<div id="subtask-panel" class="mt-8">
-  <ol class="mt-4 space-y-2.5 empty:hidden" data-subtasks-target="list">
-    <% task.children.order(:position).each.with_index(1) do |subtask, number| %>
-      <%= render "mocks/subtask_card",
-                 subtask: {
-                   kind: subtask.special? ? :special : :basic,
-                   due: subtask.due_at,
-                   done: subtask.done?,
-                   title: subtask.title,
-                   description: subtask.description,
-                   editable: false
-                 },
-                 number: format("%02d", number) %>
-    <% end %>
-  </ol>
-</div>
+<%# 日付タブとサブタスク一覧 %>
+<%= render "tasks/subtasks/content", task: task %>
+
+<%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
+                                 body: "完了した手順は「完了済みを表示」で確認できます。",
+                                 action: { label: "マイタスクへ", href: tasks_path },
+                                 data: { completed_filter_target: "empty" },
+                                 hidden: !(task.children.any? && task.children.all?(&:done?)) %>
+
+<%= render "tasks/subtasks/add_button", task: task %>

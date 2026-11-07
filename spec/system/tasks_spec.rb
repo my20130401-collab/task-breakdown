@@ -26,7 +26,8 @@ RSpec.describe "タスク機能", :js do
       find("textarea[aria-label='取り組みたいこと']").fill_in(with: "営業用の見積もりを作成する")
       click_on "タスクを分解する"
 
-      # 画面遷移とメッセージ描画を待機
+      # 詳細モック画面へ遷移し、完了メッセージが表示されること
+      expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
       created_task = Task.find_by!(title: "営業用の見積もりを作成する")
       expect(page).to have_current_path(task_path(created_task))
@@ -39,7 +40,8 @@ RSpec.describe "タスク機能", :js do
       # キーボードショートカットの送信
       textarea.send_keys([ :control, :enter ])
 
-      # 画面遷移とメッセージ描画を待機
+      # 詳細モック画面へ遷移し、完了メッセージが表示されること
+      expect(page).to have_current_path(%r{^/tasks/\d+$})
       expect(page).to have_content(I18n.t("tasks.create.success"))
       created_task = Task.find_by!(title: "ショートカット送信のテスト")
       expect(page).to have_current_path(task_path(created_task))

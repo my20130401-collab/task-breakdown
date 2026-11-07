@@ -1,0 +1,5 @@
+<%= turbo_stream.replace "subtasks_area" do %>
+  <%= render "tasks/subtasks/content", task: @task %>
+<% end %>
+
+<%= turbo_stream.replace "task_progress_#{@task.id}", partial: "tasks/progress", locals: { task: @task } %>
