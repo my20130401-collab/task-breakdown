@@ -10,8 +10,9 @@
   <% end %>
 
   <% latest_decomposition = @task.decompositions.order(created_at: :desc).first %>
-  <% is_failed = latest_decomposition&.failed? %>
-  <% is_pending = latest_decomposition&.pending? || @task.children.empty? %>
+  <%# 分解履歴がなくサブタスクもない（AI 分解の導入前に作ったタスク等）ときは、再分解できるよう失敗扱いにする %>
+  <% is_failed = latest_decomposition&.failed? || (latest_decomposition.nil? && @task.children.empty?) %>
+  <% is_pending = latest_decomposition&.pending? %>
 
   <div class="mx-auto w-full max-w-[850px] px-4 pb-16 pt-[64px]" data-controller="subtasks">
     <%# 分解ステータスとメニュー %>
