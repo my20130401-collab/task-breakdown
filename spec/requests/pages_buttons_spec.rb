@@ -1,52 +1,47 @@
 require "rails_helper"
 
-# 横断検査: 全モック画面のボタンは「フォームの送信」「Stimulus の操作」「見た目だけ（data-mock="noop"）」のどれかで、
-# 押しても何も起きない無規約のボタンが無い
-RSpec.describe "画面モックのボタン（横断検査）" do
+# 横断検査: Pages::PATHS の全画面のボタンは「フォームの送信」か「Stimulus の操作」のどちらかで、
+# 押しても何も起きない無規約のボタンや、見た目だけのボタン（data-mock="noop"）が無い
+RSpec.describe "画面のボタン（横断検査）" do
   before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
 
   def rule_of(button)
     if button["type"] == "submit" && button.ancestors("form").any? then :submit
-    elsif button["data-mock"] == "noop" then :noop
     elsif button["data-action"].present? then :action
     end
   end
 
-  MockPages::PATHS.each do |page_path|
+  Pages::PATHS.each do |page_path|
     describe page_path do
       before { get page_path }
 
-      it "すべての <button> が送信・操作・見た目のみのいずれかに当たる" do
-        violations = mock_document.css("button").reject { rule_of(it) }.map { "「#{element_name(it)}」" }
+      it "すべての <button> が送信・操作のいずれかに当たる" do
+        violations = pages_document.css("button").reject { rule_of(it) }.map { "「#{element_name(it)}」" }
 
         expect(violations).to be_empty, "規約に当たらないボタン: #{violations.join('、')}"
       end
 
       it "すべての <button> が type を明示している（フォーム内で意図せず送信しない）" do
-        violations = mock_document.css("button:not([type])").map { "「#{element_name(it)}」" }
+        violations = pages_document.css("button:not([type])").map { "「#{element_name(it)}」" }
 
         expect(violations).to be_empty, "type の無いボタン: #{violations.join('、')}"
       end
 
-      it "見た目のみのボタンは type=button で、送信ボタンにしない" do
-        noops = mock_document.css("button[data-mock='noop']")
+      it "見た目だけのボタン（data-mock=\"noop\"）が 0 件" do
+        noops = pages_document.css("[data-mock='noop']").map { "「#{element_name(it)}」" }
 
-        expect(noops.map { it["type"] }).to all(eq "button")
+        expect(noops).to be_empty, "見た目だけのボタン: #{noops.join('、')}"
       end
     end
   end
 
-  # docs/screens.md の「（見た目のみ）」と一致する（S-4, S-5 は本実装へ移行したため除外）
-  describe "見た目のみの操作" do
-    def noop_labels(path)
-      get path
-      mock_document.css("button[data-mock='noop']").map { it.text.squish }
+  # 規約・ポリシーの画面にはボタンが無いため、画面単位ではなく巡回全体で空集合を弾く
+  it "巡回した画面の <button> が 1 件以上ある（検査が空集合で素通りしない）" do
+    count = Pages::PATHS.sum do |page_path|
+      get page_path
+      pages_document.css("button").size
     end
 
-    %w[/session/new /registration/new /terms /privacy].each do |path|
-      it "#{path} には見た目のみのボタンが無い" do
-        expect(noop_labels(path)).to be_empty
-      end
-    end
+    expect(count).to be_positive
   end
 end

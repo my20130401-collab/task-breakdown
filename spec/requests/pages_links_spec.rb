@@ -1,7 +1,7 @@
 require "rails_helper"
 
-# 横断検査: 全モック画面のリンクと送信先が、アプリのルーティングで解決できる（死にリンクが無い）
-RSpec.describe "画面モックのリンクと送信先（横断検査）" do
+# 横断検査: Pages::PATHS の全画面のリンクと送信先が、アプリのルーティングで解決できる（死にリンクが無い）
+RSpec.describe "画面のリンクと送信先（横断検査）" do
   before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
 
   # 要素の遷移先を [パス, HTTP メソッド] にする。外部 URL・# だけのリンクは nil（違反）
@@ -11,7 +11,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       method = node.at_css("input[name='_method']")&.[]("value") || node["method"].presence || "get"
     else
       url = node["href"]
-      method = node["data-turbo-method"].presence || "get"  # data-turbo-method を拾うように修正
+      method = node["data-turbo-method"].presence || "get"
     end
     return nil if url.blank? || url.start_with?("#", "javascript:")
 
@@ -28,7 +28,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
     false
   end
 
-  MockPages::PATHS.each do |page_path|
+  Pages::PATHS.each do |page_path|
     describe page_path do
       before { get page_path }
 
@@ -37,7 +37,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       end
 
       it "すべての <a href> と <form action> がルーティングで解決できる（# や外部 URL を含まない）" do
-        nodes = mock_document.css("a, form")
+        nodes = pages_document.css("a, form")
         violations = nodes.filter_map do |node|
           dest = destination(node)
           next if dest && routable?(*dest)
@@ -50,10 +50,10 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       end
 
       it "外部への参照は Web フォントだけ" do
-        urls = mock_document.css("[href], [src], [action]").filter_map { it["href"] || it["src"] || it["action"] }
+        urls = pages_document.css("[href], [src], [action]").filter_map { it["href"] || it["src"] || it["action"] }
         external = urls.filter_map { URI.parse(it).host }.uniq
 
-        expect(external - MockPages::ALLOWED_EXTERNAL_HOSTS).to be_empty
+        expect(external - Pages::ALLOWED_EXTERNAL_HOSTS).to be_empty
       end
     end
   end
@@ -66,7 +66,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
     { "/session/new" => "sessions#create", "/registration/new" => "registrations#create" }.each do |path, action|
       it "#{path} のフォームは POST で送信し、#{action} が受ける" do
         get path
-        form = mock_document.at_css("form")
+        form = pages_document.at_css("form")
 
         expect(form["method"]).to eq "post"
         expect(recognized(form["action"], method: :post)).to eq action
@@ -75,7 +75,7 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
 
     it "S-2 の同意文の規約リンクは新しいタブで開き、opener を渡さない" do
       get "/registration/new"
-      links = mock_document.css("form label a")
+      links = pages_document.css("form label a")
 
       expect(links.map { it["href"] }).to eq %w[/terms /privacy]
       expect(links.map { it["target"] }).to all(eq "_blank")
@@ -86,9 +86,9 @@ RSpec.describe "画面モックのリンクと送信先（横断検査）" do
       it "#{path} はサイドバーの無いログイン前のレイアウトで、ロゴは S-3 へ移る" do
         get path
 
-        expect(mock_document.at_css("aside")).to be_nil
-        expect(mock_document.at_css("main > a")["href"]).to eq "/"
-        expect(mock_document.at_css("main > a").text).to include("Tasklet")
+        expect(pages_document.at_css("aside")).to be_nil
+        expect(pages_document.at_css("main > a")["href"]).to eq "/"
+        expect(pages_document.at_css("main > a").text).to include("Tasklet")
       end
     end
   end

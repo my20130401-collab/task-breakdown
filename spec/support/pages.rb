@@ -1,6 +1,7 @@
-# 横断検査（spec/requests/mock_*_spec.rb）で巡回する画面モックの URL と、検査用の HTML の読み方。
-module MockPages
-  # ログイン前の画面（S-1, S-2, S-6, S-7）
+# 横断検査（spec/requests/pages_*_spec.rb）で巡回する画面の URL と、検査用の HTML の読み方。
+# 画面や状態を足したら PATHS にも足す（巡回から漏れた画面は検査されない）
+module Pages
+  # ログイン前の画面（S-1 ログイン, S-2 会員登録, S-6 利用規約, S-7 プライバシーポリシー）
   PATHS = %w[
     /session/new
     /registration/new
@@ -14,10 +15,10 @@ module MockPages
   # デザイントークンを使わずに書いた色・文字サイズ（16 進の色、rgba()、10px 未満の文字）
   BANNED_VALUES = /#\h{6}\b|rgba\(|text-\[9px\]/
 
-  # 描画された HTML を読む。<template>（S-4 の「タスクを追加」用カードのひな形）は除く。
-  # Nokogiri は template の中身も通常の要素として読むため、そのままだと __NUMBER__ 入りの id や
-  # contenteditable が画面上の要素として数えられてしまう（ひな形は subtasks_controller が番号を振って複製する）
-  def mock_document(body = response.body)
+  # 描画された HTML を読む。<template> は除く。
+  # Nokogiri は template の中身も通常の要素として読むため、そのままだとひな形の id や属性が
+  # 画面上の要素として数えられてしまう
+  def pages_document(body = response.body)
     Nokogiri::HTML(body).tap { |doc| doc.css("template").each(&:remove) }
   end
 
@@ -28,5 +29,5 @@ module MockPages
 end
 
 RSpec.configure do |config|
-  config.include MockPages, type: :request
+  config.include Pages, type: :request
 end
