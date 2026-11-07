@@ -3,12 +3,7 @@
   分解に失敗しました。再度お試しください
 </p>
 
-<% if task.decompositions.order(created_at: :desc).first&.error_message.present? %>
-  <p class="mt-2 text-2xs text-accent font-mono">
-    <%= task.decompositions.order(created_at: :desc).first.error_message %>
-  </p>
-<% end %>
-
+<%# 失敗の詳細（error_message）は API の応答本文を含むため画面には出さない。調査は decompositions テーブルで行う %>
 <%# 再分解実行ボタン %>
 <%= button_to "再分解する", redecompose_task_path(task), method: :post,
               class: "mb-10 mt-6 rounded-lg bg-brand px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-hover cursor-pointer" %>

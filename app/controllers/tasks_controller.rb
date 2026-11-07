@@ -41,6 +41,9 @@ class TasksController < ApplicationController
 
   # 再分解アクション（失敗時や再実行ボタンから呼ばれる）
   def redecompose
+    # 分解中に再度押された場合は、ジョブを重複して積まない
+    return redirect_to task_path(@task) if @task.decompositions.pending.exists?
+
     @task.decompositions.create!(status: :pending, request_payload: { prompt: @task.title })
     DecomposeTaskJob.perform_later(@task.id)
 
