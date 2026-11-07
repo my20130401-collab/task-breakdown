@@ -171,7 +171,7 @@ RSpec.describe "S-4 タスク詳細", :js do
         click_button "保存"
       end
 
-      expect(page).to have_css(".text-red-600")
+      expect(page).to have_css("#task_#{existing_subtask.id} [role='alert']", text: "期限は親タスクの期限を超える日時を設定できません")
     end
   end
 
@@ -239,6 +239,84 @@ RSpec.describe "S-4 タスク詳細", :js do
 
       # 確実に描画が完了してテキストが表示されるのを待機して検証する
       expect(page).to have_link("マイタスクへ", href: "/tasks")
+    end
+  end
+
+  describe "サブタスクが 1 件も無いときの空状態" do
+    let!(:parent_task) { create(:task, :decomposition_failed, user:, title: "親タスク") }
+
+    before { visit task_path(parent_task) }
+
+    it "「サブタスクはまだありません」を出し、「タスクを追加」で入力欄を開くと空状態を隠す" do
+      expect(page).to have_css("[data-subtasks-empty='none']", text: "サブタスクはまだありません")
+      expect(page).to have_no_text("該当するサブタスクはありません")
+
+      click_link "タスクを追加"
+
+      expect(page).to have_css("li#new_subtask_form")
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+    end
+
+    it "「タスクを追加」の入力欄をキャンセルすると、空状態がまた表示される" do
+      click_link "タスクを追加"
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+
+      within("li#new_subtask_form") { click_button "キャンセル" }
+
+      expect(page).to have_no_css("li#new_subtask_form")
+      expect(page).to have_css("[data-subtasks-empty='none']", visible: :visible, text: "サブタスクはまだありません")
+
+      # もう一度開いて閉じても同じ
+      click_link "タスクを追加"
+      expect(page).to have_no_css("[data-subtasks-empty]", visible: :visible)
+      within("li#new_subtask_form") { click_button "キャンセル" }
+      expect(page).to have_css("[data-subtasks-empty='none']", visible: :visible)
+    end
+  end
+
+  # 全完了の空状態はタスク全体が完了したときだけ。日付タブで絞り込んだ手順がすべて完了しても出さない
+  describe "日付タブで選んだ日の手順がすべて完了したとき" do
+    let!(:parent_task) { user.tasks.create!(title: "親タスク", due_at: 3.days.from_now) }
+
+    before do
+      parent_task.children.create!(user: user, title: "今日の手順", due_at: Time.current.change(hour: 17))
+      parent_task.children.create!(user: user, title: "明日の手順", due_at: Time.current.tomorrow.change(hour: 12))
+      visit task_path(parent_task)
+    end
+
+    it "タスク全体は未完了なので「すべての手順が完了しました」は出さず、選んだ日付の手順が完了した旨を出す" do
+      click_link "今日"
+      expect(page).to have_no_content("明日の手順")
+
+      check_of("今日の手順").click
+      expect(page).to have_no_content("今日の手順")
+      expect(progress_text).to eq "1/2 完了"
+
+      expect(page).to have_css("[data-completed-filter-target='partialEmpty']", text: "選んだ日付の手順はすべて完了しました")
+      expect(page).to have_no_text("すべての手順が完了しました")
+
+      # 完了済みを表示すると、空状態の代わりに完了した手順が出る
+      click_on "完了済みを表示"
+      expect(page).to have_content("今日の手順")
+      expect(page).to have_no_text("選んだ日付の手順はすべて完了しました")
+    end
+
+    it "完了済みの日付タブを開き直しても、タスク全体が未完了なら全完了の空状態は出さない" do
+      check_of("今日の手順").click
+      expect(progress_text).to eq "1/2 完了"
+
+      click_link "今日"
+      expect(page).to have_css("[data-completed-filter-target='partialEmpty']", text: "選んだ日付の手順はすべて完了しました")
+      expect(page).to have_no_text("すべての手順が完了しました")
+    end
+
+    it "残りの手順も完了してタスク全体が完了すると、全完了の空状態を出す" do
+      check_of("今日の手順").click
+      expect(progress_text).to eq "1/2 完了"
+      check_of("明日の手順").click
+      expect(progress_text).to eq "2/2 完了"
+
+      expect(page).to have_text("すべての手順が完了しました")
     end
   end
 end

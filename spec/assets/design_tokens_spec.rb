@@ -18,6 +18,7 @@ RSpec.describe "デザイントークン" do
     "--color-brand" => [ "#426349" ],
     "--color-danger" => [ "oklch(50.5%0.21327.518)", "oklch(50.5%.21327.518)" ], # 旧 text-red-700
     "--color-danger-dot" => [ "oklch(57.7%0.24527.325)", "oklch(57.7%.24527.325)" ], # 旧 bg-red-600
+    "--color-danger-soft" => [ "#fbecea" ], # エラー表示の背景（旧 bg-red-50）
     "--text-2xs" => [ "10px" ]
   }.each do |token, values|
     it "#{token} が置換前と同じ値を持つ" do
@@ -37,7 +38,7 @@ RSpec.describe "デザイントークン" do
   end
 
   it "ビューで使うトークンのユーティリティが生成されている" do
-    %w[.text-2xs .text-danger .bg-danger-dot .border-line-strong .border-line-dashed .bg-avatar
+    %w[.text-2xs .text-danger .bg-danger-dot .bg-danger-soft .border-line-strong .border-line-dashed .bg-avatar
        .shadow-float .accent-brand].each do |selector|
       expect(css).to include("#{selector}{"), "#{selector} が CSS にありません"
     end

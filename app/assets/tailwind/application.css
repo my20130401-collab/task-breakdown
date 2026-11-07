@@ -43,3 +43,9 @@
 [data-hidden-by-done] {
   display: none;
 }
+
+/* S-4 の一覧が 0 件の空状態は、「タスクを追加」で一覧に入力欄（li）が入っている間は隠す（入力欄と空状態を同時に出さない）。
+   追加・キャンセルで一覧に空白の文字ノードが残るため :empty ではなく li の有無で判定する */
+#subtasks-list:has(> li) ~ [data-subtasks-empty] {
+  display: none;
+}

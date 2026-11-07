@@ -48,6 +48,24 @@ class Task < ApplicationRecord
     { completed: completed, total: total }
   end
 
+  # 最新の分解履歴（Decomposition.latest_first と同じ規則）。
+  # 一覧で includes(:decompositions) 済みのときは追加のクエリを出さずに読み込み済みの中から選ぶ
+  def latest_decomposition
+    # 未保存の履歴（created_at・id が nil）は今作ったものとして最新側に寄せる（nil との比較で例外にしない）
+    return decompositions.max_by { [ it.created_at || Time.current, it.id || Float::INFINITY ] } if decompositions.loaded?
+
+    decompositions.latest_first.first
+  end
+
+  # 分解ステータス（shared/_decomposition_status の status）。S-4 の見出し上と S-5 の行に出す。
+  # 分解履歴が無くサブタスクも無い（AI 分解の導入前に作ったタスク等）ときは、再分解できるよう失敗扱いにする
+  def decomposition_status
+    latest = latest_decomposition
+    return :failed if latest&.failed? || (latest.nil? && children.empty?)
+
+    latest&.pending? ? :decomposing : :done
+  end
+
   # 完了・未完了の切り替えメソッド
   def complete!
     update!(status: :done, completed_at: Time.current)

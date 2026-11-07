@@ -8,11 +8,16 @@ ja:
         password: "パスワード"
         password_confirmation: "パスワード（確認）"
         terms_accepted_at: "利用規約への同意"
+        terms_of_service: "利用規約とプライバシーポリシー"
       task:
         title: "タスク名"
         due_at: "期限"
     errors:
       models:
+        user:
+          attributes:
+            terms_of_service:
+              accepted: "に同意してください"
         task:
           attributes:
             due_at:

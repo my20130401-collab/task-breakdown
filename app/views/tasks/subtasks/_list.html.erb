@@ -1,11 +1,37 @@
+<%#
+  S-4 のサブタスク一覧。locals:
+    task:     親タスク
+    subtasks: 表示するサブタスク（日付タブで絞り込み済み）
+    filter:   選んでいる日付タブ（任意。既定は all）
+  0 件のときは理由ごとに空状態を出し分ける（data-subtasks-empty）:
+    none:     サブタスクが 1 件も無い（分解に失敗した、すべて削除した等）
+    filtered: サブタスクはあるが、選んだ日付タブに該当するものが無い
+  「タスクを追加」で一覧に入力欄（<li>）が入っている間は、application.css のルール（ol が li を持つか）で空状態を隠す。
+  Turbo Stream の追加やキャンセルで一覧に空白の文字が残っても判定が変わらないよう、:empty には頼らない
+%>
+<%# 表示する項目があるときは空状態を出さないので、理由を調べる問い合わせを省く %>
+<% reason = subtasks.any? || task.children.exists? ? "filtered" : "none" %>
 <div id="subtasks_list" class="mt-4">
-  <ol id="subtasks-list" class="space-y-2.5 empty:hidden">
+  <ol id="subtasks-list" class="space-y-2.5">
     <% subtasks.each.with_index(1) do |subtask, index| %>
       <%= render "tasks/subtasks/subtask", subtask: subtask, number: format("%02d", index) %>
     <% end %>
   </ol>
 
-  <%= render "shared/empty_state", icon: :calendar, title: "該当するサブタスクはありません",
-             body: "ほかの日付か「すべて」のタブで確認できます。",
-             hidden: subtasks.any? %>
+  <% if reason == "none" %>
+    <%= render "shared/empty_state", icon: :plus, title: "サブタスクはまだありません",
+               body: "「タスクを追加」から手順を追加できます。",
+               data: { subtasks_empty: reason }, hidden: subtasks.any? %>
+  <% else %>
+    <%= render "shared/empty_state", icon: :calendar, title: "該当するサブタスクはありません",
+               body: "ほかの日付か「すべて」のタブで確認できます。",
+               data: { subtasks_empty: reason }, hidden: subtasks.any? %>
+  <% end %>
+
+  <%# 日付タブで絞り込んだ手順がすべて完了して隠れたとき（タスク全体は未完了）。表示は完了フィルタが切り替える %>
+  <% if local_assigns.fetch(:filter, "all") != "all" %>
+    <%= render "shared/empty_state", icon: :inbox, title: "選んだ日付の手順はすべて完了しました",
+               body: "完了した手順は「完了済みを表示」で確認できます。",
+               data: { completed_filter_target: "partialEmpty" }, hidden: true %>
+  <% end %>
 </div>

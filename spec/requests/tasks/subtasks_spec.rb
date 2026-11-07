@@ -126,4 +126,77 @@ RSpec.describe "Tasks::Subtasks (UC-3)" do
       expect(response.body).to include(%(turbo-stream action="replace" target="task_progress_#{parent_task.id}"))
     end
   end
+
+  # サブタスクのカードは <li> そのもの（id="task_<id>"）で、Turbo Stream はこの <li> を差し替える。
+  # <ol> の直下に <turbo-frame> を挟まない
+  describe "サブタスクのマークアップ" do
+    def stream_template(target)
+      Nokogiri::HTML(response.body).at_css(%(turbo-stream[target="#{target}"] template))
+    end
+
+    it "S-4 の一覧で、<ol> の直下がサブタスクの <li> になる" do
+      get task_path(parent_task)
+
+      list = Nokogiri::HTML(response.body).at_css("ol#subtasks-list")
+      expect(list.element_children.map { [ it.name, it["id"] ] }).to eq [ [ "li", "task_#{subtask.id}" ] ]
+      expect(response.body).not_to include("<turbo-frame")
+    end
+
+    it "完了の切り替え・キャンセル（show）・編集で、差し替える内容が <li id=\"task_<id>\"> になる" do
+      patch toggle_status_task_subtask_path(parent_task, subtask), as: :turbo_stream
+      toggled = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      get task_subtask_path(parent_task, subtask), as: :turbo_stream
+      shown = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      get edit_task_subtask_path(parent_task, subtask), as: :turbo_stream
+      editing = Nokogiri::HTML(stream_template("task_#{subtask.id}").inner_html)
+
+      [ toggled, shown, editing ].each do |doc|
+        root = doc.at_css("body").element_children
+        expect(root.map { [ it.name, it["id"] ] }).to eq [ [ "li", "task_#{subtask.id}" ] ]
+      end
+    end
+  end
+
+  # 他人のサブタスクの URL は 404（親タスクもサブタスクも Current.user のものからだけ探す）
+  describe "他人のサブタスク" do
+    let(:other) { create(:user) }
+    let(:other_task) { create(:task, user: other, due_at: 1.day.from_now) }
+    let!(:other_subtask) { create(:task, :subtask, parent: other_task, title: "他人のサブタスク") }
+
+    {
+      "詳細（キャンセル）" => ->(t, st) { [ :get, task_subtask_path(t, st) ] },
+      "編集フォーム" => ->(t, st) { [ :get, edit_task_subtask_path(t, st) ] },
+      "更新" => ->(t, st) { [ :patch, task_subtask_path(t, st), { task: { title: "書き換え" } } ] },
+      "削除" => ->(t, st) { [ :delete, task_subtask_path(t, st) ] },
+      "完了の切り替え" => ->(t, st) { [ :patch, toggle_status_task_subtask_path(t, st) ] }
+    }.each do |name, request_for|
+      it "#{name}: 他人の親タスク配下の URL は 404 で、サブタスクは変わらない" do
+        verb, path, params = instance_exec(other_task, other_subtask, &request_for)
+        send(verb, path, params:, as: :turbo_stream)
+
+        expect(response).to have_http_status(:not_found)
+        expect(other_subtask.reload).to have_attributes(title: "他人のサブタスク", status: "todo")
+      end
+
+      it "#{name}: 自分の親タスクの URL に他人のサブタスクの id を入れても 404" do
+        verb, path, params = instance_exec(parent_task, other_subtask, &request_for)
+        send(verb, path, params:, as: :turbo_stream)
+
+        expect(response).to have_http_status(:not_found)
+        expect(other_subtask.reload).to have_attributes(title: "他人のサブタスク", status: "todo")
+      end
+    end
+
+    it "他人の親タスクのサブタスク一覧・追加は 404" do
+      get task_subtasks_path(other_task, filter: "all"), as: :turbo_stream
+      expect(response).to have_http_status(:not_found)
+
+      expect {
+        post task_subtasks_path(other_task), params: { task: { title: "紛れ込み" } }, as: :turbo_stream
+      }.not_to change(Task, :count)
+      expect(response).to have_http_status(:not_found)
+    end
+  end
 end

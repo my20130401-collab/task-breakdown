@@ -72,8 +72,7 @@ RSpec.describe "主要導線", :js do
     expect(page).to have_css("[data-decomposition-status='failed']", text: "分解失敗")
     expect(page).to have_content("分解に失敗しました")
 
-    # 時刻を止めたままだと新旧の分解履歴の created_at が同じになり、S-4 がどちらを最新と見るか定まらない
-    travel 1.minute
+    # 時刻を止めたままなので、新旧の分解履歴の created_at は同じになる（最新は id で決まる）
     click_on "再分解する"
     expect(page).to have_css("[data-decomposition-status='decomposing']", text: "分解中")
     expect(enqueued_jobs.size).to eq 1

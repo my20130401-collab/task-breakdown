@@ -5,5 +5,5 @@
 
 <%# リストの中身を更新 %>
 <%= turbo_stream.replace "subtasks_list" do %>
-  <%= render "tasks/subtasks/list", subtasks: @subtasks %>
+  <%= render "tasks/subtasks/list", task: @task, subtasks: @subtasks, filter: params[:filter] || "all" %>
 <% end %>

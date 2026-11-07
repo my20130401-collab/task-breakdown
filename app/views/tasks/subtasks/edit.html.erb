@@ -1,3 +1,4 @@
-<%= turbo_frame_tag @subtask, class: "block" do %>
+<%# Turbo を使わずに開いたとき用（通常は edit.turbo_stream.erb がカードをその場で入力欄に差し替える） %>
+<ol class="mx-auto max-w-[850px] px-4 pt-16">
   <%= render "form", task: @task, subtask: @subtask %>
-<% end %>
+</ol>

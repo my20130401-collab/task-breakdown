@@ -171,6 +171,9 @@ RSpec.describe Task do
   # 5. サブタスクとの完了状態の自動同期（sync_parent_status コールバック）
   # ----------------------------------------------------------------
   describe "親タスクとの完了自動同期（sync_parent_status）" do
+    # 親と子の期限を同じ時点で評価させる（時刻が進むと子の期限が親より後になり、親子期限のバリデーションに落ちる）
+    before { travel_to(Time.zone.local(2026, 6, 20, 10, 0)) }
+
     let(:user) { create(:user) }
     let(:parent_task) { create(:task, user: user, status: :todo) }
 
@@ -231,6 +234,29 @@ RSpec.describe Task do
         sub.destroy
         expect(parent_task.reload).to be_todo
       end
+    end
+  end
+
+  # ----------------------------------------------------------------
+  # 6. テストデータ（ファクトリ）
+  # ----------------------------------------------------------------
+  describe "ファクトリ" do
+    it "サブタスクの期限は親タスクの期限から導出し、作成の間に時刻が進んでも親の期限を超えない" do
+      travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+      parent_task = create(:task)
+      travel 1.second
+
+      child_task = build(:task, user: parent_task.user, parent: parent_task)
+
+      expect(child_task.due_at).to eq parent_task.due_at
+      expect(child_task).to be_valid
+    end
+
+    it "親タスクに期限が無いときは、既定の期限（明日）にする" do
+      travel_to(Time.zone.local(2026, 6, 20, 10, 0))
+      parent_task = create(:task, :without_due_at)
+
+      expect(build(:task, user: parent_task.user, parent: parent_task).due_at).to eq 1.day.from_now
     end
   end
 end

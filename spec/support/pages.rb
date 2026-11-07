@@ -39,6 +39,38 @@ module Pages
   # デザイントークンを使わずに書いた色・文字サイズ（16 進の色、rgba()、10px 未満の文字）
   BANNED_VALUES = /#\h{6}\b|rgba\(|text-\[9px\]/
 
+  # 色を取るユーティリティの接頭辞
+  COLOR_UTILITY_PREFIXES = %w[text bg border ring outline accent fill stroke divide decoration caret placeholder from via to].freeze
+
+  # Tailwind 既定のカラーパレット（red-600 等）。色は @theme のトークン（danger 等）だけを使う
+  TAILWIND_PALETTE = /\b(?:#{COLOR_UTILITY_PREFIXES.join("|")})-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/
+
+  # 色の指定として使ってよい値（@theme の --color-* と、CSS の基本値）
+  COLOR_NAMES = (Rails.root.join("app/assets/tailwind/application.css").read.scan(/--color-([a-z0-9-]+):/).flatten +
+                 %w[white black transparent current inherit]).freeze
+
+  # 色の接頭辞を持つが色ではないユーティリティ（文字サイズ・揃え・線の太さや向き等）
+  NON_COLOR_UTILITY = /\A(?:
+    text-(?:2?xs|sm|base|lg|[2-9]?xl|left|center|right|justify|start|end|wrap|nowrap|balance|pretty|ellipsis|clip|\[.+\])|
+    border(?:-[trblxyse])?(?:-\d+)?|border-(?:solid|dashed|dotted|double|none|collapse|separate)|
+    ring-\d+|ring-inset|ring-offset-\d+|outline-(?:none|hidden|dashed|dotted|double|\d+)|outline-offset-\d+|
+    divide-[xy](?:-\d+)?|decoration-(?:solid|double|dotted|dashed|wavy|\d+)|stroke-\d+|
+    bg-(?:fixed|local|scroll|clip-.+|origin-.+|no-repeat|repeat.*|cover|contain|auto|center|top|bottom|left|right|none|linear-.+|gradient-.+)
+  )\z/x
+
+  # class 属性のうち、@theme に無い色を使っているユーティリティ（例: text-main、text-red-600）。
+  # 修飾子（hover: 等）と不透明度（/80）を外して判定する
+  def undefined_color_classes(doc)
+    doc.css("[class]").flat_map { it["class"].split }.uniq.filter_map do |klass|
+      utility = klass.split(":").last.sub(%r{/\d+\z}, "")
+      prefix, value = utility.match(/\A(#{COLOR_UTILITY_PREFIXES.join("|")})-(.+)\z/)&.captures
+      next unless prefix
+      next if utility.match?(NON_COLOR_UTILITY) || COLOR_NAMES.include?(value)
+
+      klass
+    end
+  end
+
   # 巡回名の画面を開く（ログイン後の画面は、新しいユーザーでログインし、データを用意してから GET する）
   def get_page(name)
     get(PUBLIC_PATHS.include?(name) ? name : authenticated_page_path(AUTHENTICATED_PAGES.fetch(name)))
@@ -75,10 +107,11 @@ module Pages
   end
 
 
-  # S-5: 日付グループが複数あり、進捗あり・進捗なし（—）・全完了・期限なしの行を含む
+  # S-5: 日付グループが複数あり、進捗あり・進捗なし（—）・全完了・期限なし・分解中・分解失敗の行を含む
   def tasks_with_data_path(user)
     FactoryBot.create(:task, :decomposed, user:, title: "見積書を提出する")
     FactoryBot.create(:task, :decomposing, user:, title: "週報を書く", due_at: 2.days.from_now)
+    FactoryBot.create(:task, :decomposition_failed, user:, title: "歓迎会を企画する", due_at: 2.days.from_now)
     FactoryBot.create(:task, :all_subtasks_done, user:, title: "経費精算の締め確認", due_at: 3.days.from_now)
     FactoryBot.create(:task, :without_due_at, user:, title: "資格試験の学習計画を立てる")
     tasks_path

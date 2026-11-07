@@ -8,8 +8,10 @@ FactoryBot.define do
     status { :todo }
     source { :manual }
     position { 0 }
-    # 過去日バリデーションに引っかからないよう未来（明日）を設定
-    due_at { 1.day.from_now }
+    # 過去日バリデーションに引っかからないよう未来（明日）を設定。
+    # サブタスクは親の期限をそのまま使う（親と子で別々に 1.day.from_now を評価すると、
+    # 作成の間に時刻が進んで子の期限が親よりわずかに後になり、親子期限のバリデーションに落ちる）
+    due_at { parent&.due_at || 1.day.from_now }
 
     # 用途別のバリエーション（Trait）
     trait :done do

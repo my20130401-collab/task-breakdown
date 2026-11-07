@@ -3,5 +3,5 @@
   <% ordered_subtasks = task.children.ordered_by_due %>
 
   <%= render "tasks/subtasks/tabs", task: task, subtasks: ordered_subtasks, current_filter: "all" %>
-  <%= render "tasks/subtasks/list", subtasks: ordered_subtasks %>
+  <%= render "tasks/subtasks/list", task: task, subtasks: ordered_subtasks %>
 </div>

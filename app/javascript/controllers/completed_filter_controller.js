@@ -6,8 +6,13 @@ import { Controller } from "@hotwired/stimulus"
 // すべての項目が完了済みとして隠れたら empty ターゲットを表示する。
 // group ターゲット（S-5 の日付グループ等）は、中の項目がすべて完了済みとして隠れたら見出しごと
 // data-hidden-by-done を付けて隠す（group 自身は data-done を持たないので項目の件数には数えない）
+//
+// 画面に出ている項目が全体の一部のとき（S-4 の日付タブで絞り込んだとき）は、scope ターゲット
+// （S-4 の親タスクの進捗。data-complete="true|false"）で全体が完了したかを伝える。
+// empty（全完了の空状態）は全体が完了したときだけ出し、一部だけが完了して隠れたときは
+// partialEmpty（選んだ日付の手順がすべて完了した旨）を出す。scope ターゲットが無い画面（S-5）は全体＝画面の項目
 export default class extends Controller {
-  static targets = ["toggle", "empty", "group"]
+  static targets = ["toggle", "empty", "group", "scope", "partialEmpty"]
 
   connect() {
     this.apply()
@@ -45,7 +50,14 @@ export default class extends Controller {
     // 日付タブの絞り込みなど別の理由で 0 件になったときは出さない（その理由の空状態は絞り込み側が持つ）。
     // 項目がそもそも無い画面（分解失敗など）でも出さない
     const hiddenAll = allHiddenByDone(items)
-    this.emptyTargets.forEach((empty) => { empty.hidden = !hiddenAll })
+    const complete = this.complete
+    this.emptyTargets.forEach((empty) => { empty.hidden = !(hiddenAll && complete) })
+    this.partialEmptyTargets.forEach((empty) => { empty.hidden = !(hiddenAll && !complete) })
+  }
+
+  // 全体が完了しているか（scope ターゲットが無ければ、画面の項目が全体）
+  get complete() {
+    return this.scopeTargets.every((scope) => scope.dataset.complete === "true")
   }
 
   get showing() {

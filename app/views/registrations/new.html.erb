@@ -9,11 +9,18 @@
 <%= form_with model: @user, url: registration_path,
               class: "mt-9 w-full max-w-[420px] space-y-5 rounded-2xl border border-line bg-white p-8 shadow-float" do |f| %>
 
+  <%# 回数制限などで戻されたときの案内 %>
+  <% if alert = flash[:alert] %>
+    <div class="rounded-lg border border-danger-dot/30 bg-danger-soft p-4 text-left" role="alert">
+      <p class="text-[13px] font-medium text-danger"><%= alert %></p>
+    </div>
+  <% end %>
+
   <%# エラーメッセージ表示ブロック（入力不備がある場合のみ赤枠で表示） %>
   <% if @user.errors.any? %>
-    <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-left">
-      <p class="text-[13px] font-semibold text-red-700">入力内容をご確認ください：</p>
-      <ul class="mt-1.5 list-inside list-disc space-y-1 text-[12px] text-red-600">
+    <div class="rounded-lg border border-danger-dot/30 bg-danger-soft p-4 text-left" role="alert">
+      <p class="text-[13px] font-semibold text-danger">入力内容をご確認ください：</p>
+      <ul class="mt-1.5 list-inside list-disc space-y-1 text-[12px] text-danger">
         <% @user.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
@@ -23,21 +30,21 @@
 
   <%# お名前 %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :name, "お名前", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :name, "お名前", class: "block text-[11px] font-medium text-ink" %>
     <%= f.text_field :name, placeholder: "山田 優", autocomplete: "name", required: true,
                      class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
   </div>
 
   <%# メールアドレス %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :email_address, "メールアドレス", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :email_address, "メールアドレス", class: "block text-[11px] font-medium text-ink" %>
     <%= f.email_field :email_address, placeholder: "you@example.com", autocomplete: "email", required: true,
                       class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
   </div>
 
   <%# パスワード %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :password, "パスワード", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :password, "パスワード", class: "block text-[11px] font-medium text-ink" %>
     <%= f.password_field :password, autocomplete: "new-password", minlength: 8, required: true,
                          class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
     <p class="text-2xs text-subtle">8文字以上で入力してください</p>
@@ -45,7 +52,7 @@
 
   <%# パスワード（確認） %>
   <div class="space-y-1.5 text-left">
-    <%= f.label :password_confirmation, "パスワード（確認）", class: "block text-[11px] font-medium text-main" %>
+    <%= f.label :password_confirmation, "パスワード（確認）", class: "block text-[11px] font-medium text-ink" %>
     <%= f.password_field :password_confirmation, autocomplete: "new-password", required: true,
                          class: "w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-[14px] outline-none transition focus:border-brand focus:ring-1 focus:ring-brand" %>
   </div>

@@ -1,49 +1,48 @@
 <%# ジョブからの配信（コントローラ外）でも描画できるよう、@task ではなく subtask.parent を使う %>
 <% task = subtask.parent %>
-<%= turbo_frame_tag subtask, class: "block" do %>
-  <li class="group relative flex gap-3 rounded-xl border p-4 shadow-sm hover:border-line-strong transition-opacity duration-200 <%= subtask.done? ? 'border-line-dashed bg-canvas opacity-60' : 'border-line bg-white' %>" data-done="<%= subtask.done? %>">
-     
-    <%= button_to toggle_status_task_subtask_path(task, subtask), method: :patch, class: "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors #{subtask.done? ? 'border-brand bg-brand text-white' : 'border-line hover:border-line-strong'}", data: { subtask_card_target: "check" }, aria: { label: "「#{subtask.title}」を#{subtask.done? ? '未完了に戻す' : '完了にする'}" } do %>
-      <% if subtask.done? %>
-        <%= render "shared/icon", name: :check, class: "h-3 w-3" %>
-      <% end %>
+<%# カードは <li> そのもの。id（task_<id>）を Turbo Stream の差し替え先にする（<ol> の直下に <li> 以外を挟まない） %>
+<li id="<%= dom_id(subtask) %>" class="group relative flex gap-3 rounded-xl border p-4 shadow-sm hover:border-line-strong transition-opacity duration-200 <%= subtask.done? ? 'border-line-dashed bg-canvas opacity-60' : 'border-line bg-white' %>" data-done="<%= subtask.done? %>">
+
+  <%= button_to toggle_status_task_subtask_path(task, subtask), method: :patch, class: "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors #{subtask.done? ? 'border-brand bg-brand text-white' : 'border-line hover:border-line-strong'}", data: { subtask_card_target: "check" }, aria: { label: "「#{subtask.title}」を#{subtask.done? ? '未完了に戻す' : '完了にする'}" } do %>
+    <% if subtask.done? %>
+      <%= render "shared/icon", name: :check, class: "h-3 w-3" %>
     <% end %>
+  <% end %>
 
-    <span class="text-xs font-bold text-muted"><%= number %></span>
-  
-    <div class="flex-1">
-      <div class="flex items-start justify-between gap-4">
-        <div class="space-y-1">
-          <div class="flex items-center gap-2">
-            <h3 class="text-sm font-semibold text-ink <%= 'line-through text-muted' if subtask.done? %>" data-subtask-card-target="title"><%= subtask.title %></h3>
+  <span class="text-xs font-bold text-muted"><%= number %></span>
 
-            <% if subtask.special? %>
-              <span class="rounded-md bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">特殊</span>
-            <% else %>
-              <span class="rounded-md bg-canvas px-2 py-0.5 text-[10px] font-bold text-muted">基本</span>
-            <% end %>
-          </div>
-        
-          <% if subtask.description.present? %>
-            <p class="mt-1 text-[11px] text-muted line-clamp-2"><%= subtask.description %></p>
+  <div class="flex-1">
+    <div class="flex items-start justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm font-semibold text-ink <%= 'line-through text-muted' if subtask.done? %>" data-subtask-card-target="title"><%= subtask.title %></h3>
+
+          <% if subtask.special? %>
+            <span class="rounded-md bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">特殊</span>
+          <% else %>
+            <span class="rounded-md bg-canvas px-2 py-0.5 text-[10px] font-bold text-muted">基本</span>
           <% end %>
         </div>
-        <div class="flex items-center gap-2">
-          <div class="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted">
-            <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
-            <% if subtask.due_at.present? %>
-              <%= due_time_tag(subtask.due_at) %>
-            <% else %>
-              <%= link_to "期限なし", edit_task_subtask_path(task, subtask), data: { turbo_stream: true }, class: "hover:underline text-muted" %>
-            <% end %>
-          </div>
-          <%= render "shared/menu", id: "subtask-menu-#{subtask.id}", label: "「#{subtask.title}」のメニュー",
-                items: [
-                  { label: "編集", href: edit_task_subtask_path(task, subtask), data: { turbo_stream: true } },
-                  { label: "削除", href: task_subtask_path(task, subtask), method: :delete, danger: true, data: { turbo_confirm: "本当に削除しますか？" } }
-                ] %>
+
+        <% if subtask.description.present? %>
+          <p class="mt-1 text-[11px] text-muted line-clamp-2"><%= subtask.description %></p>
+        <% end %>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 whitespace-nowrap text-[11px] text-muted">
+          <%= render "shared/icon", name: :calendar, class: "h-3.5 w-3.5" %>
+          <% if subtask.due_at.present? %>
+            <%= due_time_tag(subtask.due_at) %>
+          <% else %>
+            <%= link_to "期限なし", edit_task_subtask_path(task, subtask), data: { turbo_stream: true }, class: "hover:underline text-muted" %>
+          <% end %>
         </div>
+        <%= render "shared/menu", id: "subtask-menu-#{subtask.id}", label: "「#{subtask.title}」のメニュー",
+              items: [
+                { label: "編集", href: edit_task_subtask_path(task, subtask), data: { turbo_stream: true } },
+                { label: "削除", href: task_subtask_path(task, subtask), method: :delete, danger: true, data: { turbo_confirm: "本当に削除しますか？" } }
+              ] %>
       </div>
     </div>
-  </li>
-<% end %>
+  </div>
+</li>

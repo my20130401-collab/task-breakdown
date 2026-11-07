@@ -1,4 +1,11 @@
-<%# 親タスクの進捗。サブタスクの操作や AI 分解の完了時に、この要素ごと差し替える %>
-<div id="task_progress_<%= task.id %>" class="w-40">
-  <%= render "shared/task_progress", done: task.children.count(&:done?), total: task.children.size %>
-</div>
+<%#
+  親タスクの進捗。サブタスクの操作や AI 分解の完了時に、この要素ごと差し替える。
+  data-complete はサブタスクがすべて完了したか。完了フィルタ（scope ターゲット）が、日付タブで一部だけを
+  表示しているときも全完了の空状態をタスク全体の完了でだけ出すために読む
+%>
+<% done = task.children.count(&:done?) %>
+<% total = task.children.size %>
+<%= tag.div id: "task_progress_#{task.id}", class: "w-40",
+            data: { completed_filter_target: "scope", complete: total.positive? && done == total } do %>
+  <%= render "shared/task_progress", done:, total: %>
+<% end %>
