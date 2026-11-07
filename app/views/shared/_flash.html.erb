@@ -1,0 +1,24 @@
+<%#
+  保存・削除などの結果のお知らせ（flash）。ヘッダーバー（高さ 68px）の下、メイン領域の右上に重ねて出す。
+  画面の流れに入れないので、ヘッダーや見出しを押し下げない。閉じるボタンで消せ、
+  お知らせ（notice）は 5 秒で自動的に消える（エラー（alert）は閉じるまで残す）。
+  data-turbo-temporary で、戻る操作のキャッシュから復元したときに再び出さない
+%>
+<% messages = [ [ :notice, notice ], [ :alert, alert ] ].select { |_, message| message.present? } %>
+<% if messages.any? %>
+  <div class="pointer-events-none fixed right-6 top-[84px] z-50 flex w-[360px] flex-col gap-2" data-turbo-temporary>
+    <% messages.each do |type, message| %>
+      <%= tag.div role: (type == :notice ? "status" : "alert"),
+                  class: class_names("pointer-events-auto flex items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-float",
+                                     "border-brand-dot bg-brand-soft text-brand": type == :notice,
+                                     "border-danger-dot bg-danger-soft text-danger": type == :alert),
+                  data: { controller: "flash", flash: type, flash_timeout_value: (5000 if type == :notice) } do %>
+        <p class="flex-1"><%= message %></p>
+        <button type="button" aria-label="お知らせを閉じる" data-action="flash#close"
+                class="-mr-1 grid h-5 w-5 shrink-0 place-items-center rounded opacity-70 hover:opacity-100">
+          <%= render "shared/icon", name: :close, class: "h-3.5 w-3.5" %>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

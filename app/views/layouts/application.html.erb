@@ -8,22 +8,8 @@
     <div class="flex min-h-screen">
       <%= render "shared/sidebar" %>
       <main class="flex-1 min-w-0">
-        <% if notice.present? %>
-          <div class="mx-auto max-w-2xl px-4 pt-4">
-            <div class="rounded-lg border border-brand-dot bg-brand-soft px-4 py-3 text-sm text-brand" role="status">
-              <span><%= notice %></span>
-            </div>
-          </div>
-        <% end %>
-        <% if alert.present? %>
-          <div class="mx-auto max-w-2xl px-4 pt-4">
-            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
-              <span><%= alert %></span>
-            </div>
-          </div>
-        <% end %>
-
         <%= yield %>
+        <%= render "shared/flash" %>
       </main>
     </div>
   </body>

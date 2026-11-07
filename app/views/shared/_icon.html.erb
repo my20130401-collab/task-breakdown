@@ -1,4 +1,4 @@
-<%# Lucide 風のインライン SVG アイコン。name: sparkles / inbox / calendar / chevron_left / chevron_right / plus / more %>
+<%# Lucide 風のインライン SVG アイコン。name: sparkles / inbox / calendar / chevron_left / chevron_right / plus / more / check / close %>
 <% paths = {
   sparkles: '<path d="M9.94 14.06 8 20l-1.94-5.94L0 12l6.06-1.94L8 4l1.94 6.06L16 12z" transform="translate(1 -1) scale(.85)"/><path d="M19 3v4M17 5h4"/><path d="M19 15v3M17.5 16.5h3"/>',
   inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
@@ -7,7 +7,8 @@
   chevron_right: '<path d="m9 18 6-6-6-6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
-  check: '<polyline points="20 6 9 17 4 12"></polyline>'
+  check: '<polyline points="20 6 9 17 4 12"></polyline>',
+  close: '<path d="M18 6 6 18M6 6l12 12"/>'
 } %>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="<%= local_assigns.fetch(:stroke, 1.75) %>"
      stroke-linecap="round" stroke-linejoin="round" class="<%= local_assigns[:class] %>" aria-hidden="true"><%= paths.fetch(name).html_safe %></svg>
