@@ -7,9 +7,10 @@
   <% end %>
 
   <nav class="mt-8 space-y-2">
-    <%# current: その画面自身なら "page"、配下の画面（タスク詳細）なら "true" %>
-    <% [ ["タスクを作る", :inbox, root_path, "new", %w[] ], ["マイタスク", :calendar, tasks_path, "index", %w[task_detail] ] ].each do |label, icon, path, page, children| %>
-      <% current = if action_name == page then "page" elsif action_name.in?(children) then "true" end %>
+    <%# current: その画面自身なら "page"、配下の画面（入力エラーで描き直した作成画面、タスク詳細・編集）なら "true"。
+        判定は TasksController のアクションに限る（他コントローラの同名アクションでハイライトしない） %>
+    <% [ ["タスクを作る", :inbox, root_path, "new", %w[create] ], ["マイタスク", :calendar, tasks_path, "index", %w[show edit update] ] ].each do |label, icon, path, page, children| %>
+      <% current = if controller_name != "tasks" then nil elsif action_name == page then "page" elsif action_name.in?(children) then "true" end %>
       <%= link_to path, aria: { current: }, class: class_names("flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-semibold",
                                                                current ? "bg-brand-soft text-brand" : "text-muted hover:bg-canvas") do %>
         <%= render "shared/icon", name: icon, class: "h-4 w-4" %>

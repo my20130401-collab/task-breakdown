@@ -28,8 +28,11 @@ RSpec.describe TaskDecomposer do
 
       expect { decomposer.call }.to change { parent_task.children.count }.by(2)
       expect(decomposer.decomposition).to be_succeeded
-      expect(parent_task.children.first.position).to eq(1)
-      expect(parent_task.children.first).to be_ai
+      # children は並び順を持たず、保存時の sync_parent_status が読み直した順（DB 任せ）でメモリに残るため、
+      # 作成順（id 順）で取り直して先頭を確かめる
+      first_created = parent_task.children.order(:id).first
+      expect(first_created.position).to eq(1)
+      expect(first_created).to be_ai
     end
   end
 

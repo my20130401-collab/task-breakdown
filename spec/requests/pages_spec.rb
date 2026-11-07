@@ -88,6 +88,7 @@ RSpec.describe "利用規約・プライバシーポリシー" do
       expect(body_text).to include("OpenAI")
       expect(body_text).to include("氏名・メールアドレスは送信しません")
       expect(body_text).to include("第三者")
+      expect(body_text).to include("Google Fonts", "Google のサーバーへ、IP アドレス")
       expect(body_text).to include("保存期間", "デモ期間")
       expect(body_text).to include("削除", "運営チャンネル")
       expect(body_text).to include("Cookie", "セッション ID")
