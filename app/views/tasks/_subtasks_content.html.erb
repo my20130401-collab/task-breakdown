@@ -1,0 +1,22 @@
+<%# 完了時の説明文 %>
+<p class="mt-4 text-[11px] text-muted">
+  AI が実行しやすい手順に分解しました。内容は自由に編集できます。
+</p>
+
+<%# サブタスク一覧エリア %>
+<div id="subtask-panel" class="mt-8">
+  <ol class="mt-4 space-y-2.5 empty:hidden" data-subtasks-target="list">
+    <% task.children.order(:position).each.with_index(1) do |subtask, number| %>
+      <%= render "mocks/subtask_card",
+                 subtask: {
+                   kind: subtask.special? ? :special : :basic,
+                   due: subtask.due_at,
+                   done: subtask.done?,
+                   title: subtask.title,
+                   description: subtask.description,
+                   editable: false
+                 },
+                 number: format("%02d", number) %>
+    <% end %>
+  </ol>
+</div>

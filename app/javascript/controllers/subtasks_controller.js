@@ -7,6 +7,8 @@ export default class extends Controller {
   static targets = ["list", "template", "progress"]
 
   connect() {
+    if (!this.hasListTarget) return
+
     this.renderProgress()
     this.observer = new MutationObserver(() => this.renderProgress())
     this.observer.observe(this.listTarget, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-done"] })
@@ -27,7 +29,7 @@ export default class extends Controller {
   }
 
   renderProgress() {
-    if (!this.hasProgressTarget) return
+    if (!this.hasProgressTarget || !this.hasListTarget) return
 
     const cards = Array.from(this.listTarget.querySelectorAll(":scope > [data-done]"))
     const total = cards.length

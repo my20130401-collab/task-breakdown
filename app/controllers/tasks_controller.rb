@@ -1,16 +1,19 @@
+# frozen_string_literal: true
+
 class TasksController < ApplicationController
   include DueDateHelper
 
-  # 編集・更新・削除の前に、対象のタスクをあらかじめ探しておく共通処理
-  before_action :set_task, only: %i[edit update destroy]
+  # 編集・更新・削除・詳細表示・再分解の前に、対象のタスクを探しておく共通処理
+  before_action :set_task, only: %i[show edit update destroy redecompose]
 
   # マイタスク一覧（S-5）の表示
   def index
-    # ログイン中ユーザーの親タスクを期限順で取得
     tasks = Current.user.tasks.roots.ordered_by_due.includes(:children)
-
-    # 日付見出しごと（今日・明日・M/D・期限なし）にグループ化
     @grouped_tasks = tasks.group_by { |task| due_label(task.due_at, date_only: true) }
+  end
+
+  # タスク詳細画面（S-4）の表示
+  def show
   end
 
   # タスク作成画面（S-3）の表示
@@ -23,11 +26,28 @@ class TasksController < ApplicationController
     @task = Current.user.tasks.build(task_params)
 
     if @task.save
-      redirect_to task_detail_mock_path, notice: t(".success")
+      # 1. AI 分解履歴（分解中: pending）を作成
+      @task.decompositions.create!(status: :pending, request_payload: { prompt: @task.title })
+      # 2. 非同期ジョブをキューに登録（裏側で実行）
+      DecomposeTaskJob.perform_later(@task.id)
+
+      # 3. 作成されたタスクの詳細画面（S-4）へリダイレクト
+      redirect_to task_path(@task), notice: t(".success")
     else
       flash.now[:alert] = t(".failure")
       render :new, status: :unprocessable_entity
     end
+  end
+
+  # 再分解アクション（失敗時や再実行ボタンから呼ばれる）
+  def redecompose
+    # 分解中に再度押された場合は、ジョブを重複して積まない
+    return redirect_to task_path(@task) if @task.decompositions.pending.exists?
+
+    @task.decompositions.create!(status: :pending, request_payload: { prompt: @task.title })
+    DecomposeTaskJob.perform_later(@task.id)
+
+    redirect_to task_path(@task)
   end
 
   # タスク編集画面の表示

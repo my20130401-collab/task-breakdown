@@ -36,22 +36,11 @@ RSpec.describe "画面モックのボタン（横断検査）" do
     end
   end
 
-  # docs/screens.md の「（見た目のみ）」と一致する
+  # docs/screens.md の「（見た目のみ）」と一致する（S-4, S-5 は本実装へ移行したため除外）
   describe "見た目のみの操作" do
     def noop_labels(path)
       get path
       mock_document.css("button[data-mock='noop']").map { it.text.squish }
-    end
-
-    it "S-4 は親タスクのメニュー（編集・再分解・削除）とサブタスクのメニュー（編集・期限設定・削除）" do
-      labels = noop_labels("/tasks/sample")
-
-      expect(labels.first(3)).to eq %w[編集 再分解 削除]
-      expect(labels.drop(3).each_slice(3).to_a.uniq).to eq [ %w[編集 期限設定 削除] ]
-    end
-
-    it "S-4 の分解失敗では「再分解する」も見た目のみ" do
-      expect(noop_labels("/tasks/sample?status=failed")).to eq %w[編集 再分解 削除 再分解する]
     end
 
     %w[/login /signup /terms /privacy].each do |path|
