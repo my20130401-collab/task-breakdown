@@ -38,9 +38,8 @@
   }
 }
 
-/* 完了フィルタ・日付タブによる非表示。状態は data 属性だけで表し、見た目はここで一括して消す。
+/* 完了フィルタによる非表示。状態は data 属性だけで表し、見た目はここで一括して消す。
    レイヤー外に置き、要素側の flex 等の表示ユーティリティより優先させる */
-[data-hidden-by-done],
-[data-hidden-by-tab] {
+[data-hidden-by-done] {
   display: none;
 }

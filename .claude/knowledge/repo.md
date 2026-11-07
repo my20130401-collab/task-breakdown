@@ -37,13 +37,13 @@
 - cuprite は `url_blacklist` で Web フォント（fonts.googleapis.com / fonts.gstatic.com）を遮断している（外部の応答待ちによる Ferrum タイムアウト対策）。system spec ではフォントが当たらない（Docker の Chromium は和文セリフ体が豆腐になる）が、見た目の確認用スクリーンショットでもそのまま
 - 遮断したリクエストは `page.driver.network_traffic` に残らない（`blocked?` で探せない）。遮断の確認は「該当 URL が 1 件も無い」で書く
 
-## 横断検査（`spec/requests/mock_*_spec.rb`）
-- 巡回する URL は `spec/support/mock_pages.rb` の `MockPages::PATHS`（全画面・全状態）。**画面や状態を足したらここにも足す**。ファイル名・定数名の `mock_` `MockPages` はモック時代の名残で、#108 で本実装向けに整理する
-- `mock_links_spec`: 全 `<a href>` / `<form action>` が `recognize_path` で解決できる（`#`・外部 URL 不可。外部参照は `ALLOWED_EXTERNAL_HOSTS` の Web フォントだけ）。S-5 行リンクの `status` / `due`、ログイン前レイアウト、POST ルート、規約リンクの `target=_blank rel=noopener` もここ
-- `mock_buttons_spec`: 全 `<button>` が `type="submit"` かつ form 内／`data-action` あり／`data-mock="noop"` のいずれかで、`type` を明示。`docs/screens.md` の「画面モックで動く操作」節は #111 で撤去したので、見た目のみのボタンを新たに作らない
-- `mock_views_spec`: `<title>` が「〜 | Tasklet」、トークン外の色・文字サイズ（描画結果と `app/views` の両方）、id の画面内一意（`role="menu"` 含む）、メニューのトリガーと完了チェックの `aria-label` の一意、初期表示に `contenteditable` が無い
-- 検査は `mock_document`（`<template>` を取り除いた Nokogiri 文書）で読む。追加カードのひな形は `__NUMBER__` 入りの id と `contenteditable` を持つため対象外
-- 追加カードの textbox の `aria-label`（「タスク名」「補足」）は複数追加すると同名になるが、カード内の入力欄の名前としては許容し、一意性の検査対象外（読み上げの区別は完了チェック・メニュー側の名前で行う）
+## 横断検査（`spec/requests/pages_*_spec.rb`）
+- 巡回する URL は `spec/support/pages.rb` の `Pages::PATHS`。現在はログイン前の画面（`/session/new` `/registration/new` `/terms` `/privacy`）。**画面や状態を足したらここにも足す**（ログイン後の画面への拡張は #109）。`Pages` は request spec に include 済み
+- `pages_links_spec`: 全 `<a href>` / `<form action>` が `recognize_path` で解決できる（`#`・外部 URL 不可。`data-turbo-method` / hidden `_method` も見る。外部参照は `ALLOWED_EXTERNAL_HOSTS` の Web フォントだけ）。ログイン前レイアウト（`aside` 無し・ロゴは `/`）、S-1/S-2 の POST 先、規約リンクの `target=_blank rel=noopener` もここ
+- `pages_buttons_spec`: 全 `<button>` が「`type="submit"` かつ form 内」か「`data-action` あり」のどちらかで、`type` を明示。見た目だけのボタン（`data-mock="noop"`）は全画面で 0 件（`shared/_menu` の href 無し項目が出たら落ちる）。規約・ポリシーにはボタンが無いので、空集合の検査は巡回全体の `<button>` 件数 > 0 で行う
+- `pages_views_spec`: `<title>` が「〜 | Tasklet」、トークン外の色・文字サイズ（描画結果と `app/views` の両方）、id の画面内一意（`role="menu"` 含む）、メニューのトリガーと完了チェック（`data-subtask-card-target="check"`）の `aria-label` の一意、`contenteditable` が無い
+- 検査は `pages_document`（`<template>` を取り除いた Nokogiri 文書）で読む。違反の報告名は `element_name`（`aria-label` → 文字列 → `id`）
+- 対象要素が空なら失敗させる（`pages_links_spec` は `a, form` が 0 件なら落ちる。空集合で素通りさせない）
 
 ## 作業ディレクトリの共有
 - 複数のエージェント（developer / tester 等）が同じ作業ディレクトリを使う。tester が比較のために `git switch main` や特定コミットを checkout すると、developer 側が detached HEAD になり push が漏れる。別リビジョンとの比較は `git worktree add ../tb-main origin/main` など別ディレクトリで行う（#12, 2026-10-25）

@@ -17,10 +17,9 @@ RSpec.describe "S-4 タスク詳細", :js do
     fill_in "メールアドレス", with: user.email_address
     fill_in "パスワード", with: "password123"
     click_on "ログイン"
-  end
-
-  def card(title)
-    find("ol[data-subtasks-target='list'] > li", text: title)
+    # ログインの完了（ホームへの遷移）を待ってから各 example の visit に進む。
+    # 待たないと Cookie が付く前に visit してログイン画面へ戻され、要素が見つからず落ちることがある
+    page.assert_current_path(root_path)
   end
 
   def check_of(title)
