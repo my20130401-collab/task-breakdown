@@ -130,6 +130,30 @@ RSpec.describe Evals::DecompositionScorer do
       )
     end
 
+    it "期限の下限は評価時刻の 1 分前まで許容し、それより前は NG（現在時刻を分単位に丸めた応答を誤判定しない）" do
+      now_with_seconds = Time.zone.parse("2026-10-26 09:00:45")
+      response_with_first_due = lambda do |due_at|
+        { subtasks: [
+          subtask("仕入れ先に見積もりを依頼する", kind: "special", due_at: due_at),
+          subtask("見積書を作成する", due_at: "2026-10-26T16:00:00+09:00"),
+          subtask("見積書を提出する", due_at: "2026-10-26T17:00:00+09:00")
+        ] }
+      end
+      score_at = ->(due_at) { described_class.new(eval_case: estimate, response: response_with_first_due.call(due_at), now: now_with_seconds).call }
+
+      expect(check_named(score_at.call("2026-10-26T09:00:00+09:00"), "期限の範囲")).to be_ok
+      expect(check_named(score_at.call("2026-10-26T08:59:45+09:00"), "期限の範囲")).to be_ok
+      expect(check_named(score_at.call("2026-10-26T08:59:44+09:00"), "期限の範囲"))
+        .to have_attributes(ok: false, reason: include("1 件目が現在より前（10/26 08:59）"))
+    end
+
+    it "上司の承認は「上司に相談」「上司へ相談」でも該当する" do
+      %w[上司に相談して進め方を決める 上司へ相談して了解を得る].each do |title|
+        response = { subtasks: [ subtask(title, kind: "special") ] }
+        expect(check_named(score(proposal, response), "上司の承認", category: :special)).to be_ok
+      end
+    end
+
     it "期限が実行順に並んでいなければ期限の順序が NG" do
       response = { subtasks: [
         subtask("仕入れ先に見積もりを依頼する", kind: "special", due_at: "2026-10-26T15:00:00+09:00"),

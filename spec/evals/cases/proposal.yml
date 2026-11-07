@@ -13,7 +13,7 @@ expect:
     - name: 必要書類の準備
       keywords: [書類, 資料]
     - name: 上司の承認
-      keywords: [承認, 事前相談, 了承]
+      keywords: [承認, 事前相談, 了承, 上司に相談, 上司へ相談]
     - name: 起案書の申請
       keywords: [申請, 提出, 回付]
   order:

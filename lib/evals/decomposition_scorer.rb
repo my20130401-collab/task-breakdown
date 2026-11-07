@@ -4,6 +4,9 @@ module Evals
   # AI の分解結果（Llm クライアントの decompose の戻り値）を評価事例の期待値でルールベース採点する
   # 外部通信・DB 保存を行わない純粋なクラス
   class DecompositionScorer
+    # 期限の下限の許容幅。AI は現在時刻を分単位に丸めて返すことがあり、秒差で「現在より前」と判定しないため
+    NOW_TOLERANCE = 1.minute
+
     # 採点項目 1 件の結果
     Check = Data.define(:category, :name, :ok, :reason) do
       def ok? = ok
@@ -98,7 +101,7 @@ module Evals
           "#{label}に期限がない"
         elsif due_at == :invalid
           "#{label}の期限を解釈できない"
-        elsif due_at < @now
+        elsif due_at < @now - NOW_TOLERANCE
           "#{label}が現在より前（#{format_time(due_at)}）"
         elsif @parent_due_at && due_at > @parent_due_at
           "#{label}が親の期限より後（#{format_time(due_at)}）"

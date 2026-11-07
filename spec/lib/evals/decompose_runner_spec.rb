@@ -56,4 +56,14 @@ RSpec.describe Evals::DecomposeRunner do
     expect(out.string).not_to include("sk-secret")
     expect(out.string).to include("合計: 0/2 事例が合格")
   end
+
+  it "エラー本文が複数行の JSON でも 1 行に詰めて出力する" do
+    failing = instance_double(Llm::OpenAiClient)
+    allow(failing).to receive(:decompose)
+      .and_raise(RuntimeError, "OpenAI API 通信エラー: HTTP 429 - {\n  \"error\": {\n    \"code\": \"rate_limit\"\n  }\n}")
+
+    run(%w[estimate], client: failing)
+
+    expect(out.string).to include('HTTP 429 - { "error": { "code": "rate_limit" } }）')
+  end
 end

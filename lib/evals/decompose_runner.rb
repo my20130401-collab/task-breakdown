@@ -43,7 +43,7 @@ module Evals
       @out.puts "結果: #{result.passed? ? '合格' : "不合格（NG #{result.failures.size} 件）"}"
       result.passed?
     rescue StandardError => e
-      @out.puts "結果: 不合格（分解の実行に失敗: #{e.class}: #{filter_secret(e.message)}）"
+      @out.puts "結果: 不合格（分解の実行に失敗: #{e.class}: #{filter_secret(e.message).squish}）"
       false
     end
 
