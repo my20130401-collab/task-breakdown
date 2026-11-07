@@ -26,7 +26,7 @@
 - S-4 のサブタスク操作（追加・編集・削除・完了・日付タブ）は Turbo Stream。追加・編集・削除後は `subtasks_area` ごと描き直し（期限順に並べ直す）、完了は該当カードだけ差し替え、いずれも `task_progress_<id>` を差し替える。日付タブはサーバ側で絞り込む（`filter=all|today|tomorrow|YYYY-MM-DD`）
 - 期限の表示はすべて `DueDateHelper`（`due_label` / `due_key` / `due_time_tag`）を通す。期限は `<time datetime>` で出力され、spec はこれを拾って書式を検査する
 - 日付に依存する spec は `travel_to` で固定する（`ActiveSupport::Testing::TimeHelpers` は `rails_helper` で全 spec に include 済み）
-- 既知のずれ: サイドバーの `children` 判定が `%w[task_detail]`（モック時代のアクション名）のままで、S-4（`tasks#show`）でマイタスクがハイライトされない（#111 で docs は現状に合わせた）
+- サイドバーの現在地は `controller_name == "tasks"` のときだけ判定する（`new`=タスクを作る、`index`=マイタスクが `page`。`create`／`show` `edit` `update` は配下として `true`）。`spec/requests/sidebar_spec.rb` で確認（#111）
 
 ## system spec（`spec/system/`）
 - JS を動かす spec は `:js` を付ける（`type: :system` は配置から推論）。ドライバは cuprite（`spec/support/capybara.rb` の `:cuprite_ja`、1280x900・ja-JP）。`:js` なしは rack_test
