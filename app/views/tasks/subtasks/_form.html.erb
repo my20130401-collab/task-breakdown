@@ -1,0 +1,32 @@
+<li id="<%= subtask.persisted? ? dom_id(subtask) : 'new_subtask_form' %>" class="rounded-xl border border-brand bg-brand-soft p-4 shadow-sm">
+  <%= form_with model: subtask, url: subtask.persisted? ? task_subtask_path(task, subtask) : task_subtasks_path(task), class: "space-y-3" do |f| %>
+    <% if subtask.errors.any? %>
+      <div class="rounded-md bg-red-50 p-2 text-xs text-red-600 space-y-1">
+        <ul class="list-disc list-inside">
+          <% subtask.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+    
+    <div>
+      <%= f.text_field :title, class: "w-full rounded-md border-line px-3 py-2 text-sm focus:border-brand focus:ring-brand", placeholder: "サブタスク名", autofocus: true %>
+    </div>
+    <div>
+      <%= f.text_area :description, rows: 2, class: "w-full rounded-md border-line px-3 py-2 text-xs focus:border-brand focus:ring-brand", placeholder: "補足説明（任意）" %>
+    </div>
+    <div>
+      <%= f.datetime_field :due_at, id: "due_at", class: "w-full rounded-md border-line px-3 py-2 text-xs focus:border-brand focus:ring-brand" %>
+    </div>
+    <div class="flex justify-end gap-2">
+      <!-- キャンセル時は show アクションにリクエストを送り、元の表示に戻す -->
+      <% if subtask.persisted? %>
+      <%= link_to "キャンセル", task_subtask_path(task, subtask), data: { turbo_stream: true }, class: "rounded-md px-3 py-1.5 text-xs font-semibold text-muted hover:bg-canvas" %>
+    <% else %>
+      <button type="button" onclick="this.closest('li').remove()" class="rounded-md px-3 py-1.5 text-xs font-semibold text-muted hover:bg-canvas">キャンセル</button>
+    <% end %>
+      <%= f.submit "保存", class: "rounded-md bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-hover cursor-pointer" %>
+    </div>
+  <% end %>
+</li>

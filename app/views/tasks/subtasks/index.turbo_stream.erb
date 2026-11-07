@@ -1,0 +1,9 @@
+<%# タブのUI（選択状態）を更新 %>
+<%= turbo_stream.replace "subtask_tabs" do %>
+  <%= render "tasks/subtasks/tabs", task: @task, subtasks: @task.children, current_filter: params[:filter] || "all" %>
+<% end %>
+
+<%# リストの中身を更新 %>
+<%= turbo_stream.replace "subtasks_list" do %>
+  <%= render "tasks/subtasks/list", subtasks: @subtasks %>
+<% end %>

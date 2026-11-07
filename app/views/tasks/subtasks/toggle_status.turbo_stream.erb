@@ -1,0 +1,9 @@
+<%# app/views/tasks/subtasks/toggle_status.turbo_stream.erb %>
+
+<%# 1. 該当サブタスクの行を更新 %>
+<%= turbo_stream.replace @subtask do %>
+  <%= render "tasks/subtasks/subtask", subtask: @subtask, number: format("%02d", @number) %>
+<% end %>
+
+<%# 2. 親タスクの進捗バーを更新 %>
+<%= turbo_stream.replace "task_progress_#{@task.id}", partial: "tasks/progress", locals: { task: @task } %>

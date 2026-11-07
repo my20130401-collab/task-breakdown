@@ -1,7 +1,7 @@
 if ENV["COVERAGE"] != "false"
   require "simplecov"
   SimpleCov.start "rails" do
-    add_filter "/spec/"
+    skip "/spec/"
     # モック段階のため既定は閾値なし。ロジック実装後に 80 へ戻す（MIN_COVERAGE=80 で指定可）
     minimum_coverage ENV.fetch("MIN_COVERAGE", 0).to_i
   end

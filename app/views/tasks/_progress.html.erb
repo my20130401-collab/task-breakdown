@@ -1,0 +1,4 @@
+<%# 親タスクの進捗。サブタスクの操作や AI 分解の完了時に、この要素ごと差し替える %>
+<div id="task_progress_<%= task.id %>" class="w-40">
+  <%= render "shared/task_progress", done: task.children.count(&:done?), total: task.children.size %>
+</div>

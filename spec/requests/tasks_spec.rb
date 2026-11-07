@@ -66,7 +66,7 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
           }
         end
 
-        it "タスクが作成され、ログイン中ユーザーに紐づいて詳細モックへリダイレクトされる" do
+        it "タスクが作成され、ログイン中ユーザーに紐づいて詳細画面へリダイレクトされる" do
           expect do
             post tasks_path, params: valid_params
           end.to change(user.tasks, :count).by(1)
@@ -74,7 +74,7 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
           created_task = user.tasks.last
           expect(created_task.title).to eq("新規事業の提案資料を作成する")
 
-          expect(response).to redirect_to(task_detail_mock_path)
+          expect(response).to redirect_to(task_path(created_task))
           expect(flash[:notice]).to eq(I18n.t("tasks.create.success"))
         end
       end
@@ -155,6 +155,45 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("自分の親タスク")
         expect(response.body).not_to include("他人の親タスク")
+      end
+    end
+  end
+
+  # ------------------------------------------------------------
+  # 追加. タスク詳細画面の表示（GET /tasks/:id）
+  # ------------------------------------------------------------
+  describe "GET /tasks/:id" do
+    let!(:task) { user.tasks.create!(title: "自分のタスク", due_at: 1.day.from_now) }
+
+    context "未ログインの場合" do
+      it "ログイン画面へリダイレクトされる" do
+        get task_path(task)
+        expect(response).to redirect_to(new_session_path)
+      end
+    end
+
+    context "ログイン済みの場合" do
+      before do
+        post session_path, params: { email_address: user.email_address, password: "password123" }
+      end
+
+      it "200 OK で自分のタスク詳細画面が表示される" do
+        get task_path(task)
+        expect(response).to have_http_status(:ok)
+      end
+
+      # 今回のIssue要件：他人のタスクアクセス制御
+      it "他人のタスクの詳細画面を開こうとすると 404 Not Found になる" do
+        other_user = User.create!(
+          name: "他ユーザー",
+          email_address: "other_show@example.com",
+          password: "password123",
+          terms_accepted_at: Time.current
+        )
+        other_task = other_user.tasks.create!(title: "他人のタスク")
+
+        get task_path(other_task)
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
@@ -251,6 +290,17 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
         end
       end
 
+      context "Turbo Streamリクエストで無効なパラメータの場合（タイトルが空欄）" do
+        it "タスクは更新されず、422 でedit画面が再描画される（MissingTemplateにならない）" do
+          patch task_path(task), params: { task: { title: "" } }, as: :turbo_stream
+
+          expect(task.reload.title).to eq("更新前のタスク")
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(response.body).to include("タスクの編集")
+          expect(flash.now[:alert]).to eq(I18n.t("tasks.update.failure"))
+        end
+      end
+
       # AC-4: 他人のタスク認可制御
       it "他人のタスクを更新しようとすると 404 Not Found になる" do
         other_user = User.create!(
@@ -312,6 +362,43 @@ RSpec.describe "タスク管理（作成・更新・削除・認可）" do
         expect(response).to have_http_status(:not_found)
         expect(Task.exists?(other_task.id)).to be true
       end
+    end
+  end
+
+  # ------------------------------------------------------------
+  # タスク詳細の分解ステータス表示と再分解（GET /tasks/:id, POST /tasks/:id/redecompose）
+  # ------------------------------------------------------------
+  describe "分解ステータスと再分解" do
+    let!(:task) { create(:task, user: user, title: "見積もりを作成する") }
+
+    before do
+      post session_path, params: { email_address: user.email_address, password: "password123" }
+    end
+
+    it "分解履歴もサブタスクもないタスクは、分解中のままにせず再分解ボタンを表示する" do
+      get task_path(task)
+
+      expect(response.body).to include("再分解する")
+      expect(response.body).not_to include("data-skeleton")
+    end
+
+    it "分解に失敗したとき、エラーの詳細（API の応答）は画面に出さない" do
+      create(:decomposition, :failed, task: task, error_message: "OpenAI API 通信エラー: HTTP 401 - secret body")
+
+      get task_path(task)
+
+      expect(response.body).to include("再分解する")
+      expect(response.body).not_to include("secret body")
+    end
+
+    it "分解中に再分解しても、ジョブと履歴を重複して作らない" do
+      create(:decomposition, task: task, status: :pending)
+
+      expect {
+        post redecompose_task_path(task)
+      }.not_to have_enqueued_job(DecomposeTaskJob)
+      expect(task.decompositions.count).to eq 1
+      expect(response).to redirect_to(task_path(task))
     end
   end
 end

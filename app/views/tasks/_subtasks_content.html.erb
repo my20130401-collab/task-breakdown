@@ -1,0 +1,15 @@
+<%# 分解完了時の説明文 %>
+<p class="mt-4 text-[11px] text-muted">
+  AI が実行しやすい手順に分解しました。内容は自由に編集できます。
+</p>
+
+<%# 日付タブとサブタスク一覧 %>
+<%= render "tasks/subtasks/content", task: task %>
+
+<%= render "shared/empty_state", icon: :inbox, title: "すべての手順が完了しました",
+                                 body: "完了した手順は「完了済みを表示」で確認できます。",
+                                 action: { label: "マイタスクへ", href: tasks_path },
+                                 data: { completed_filter_target: "empty" },
+                                 hidden: !(task.children.any? && task.children.all?(&:done?)) %>
+
+<%= render "tasks/subtasks/add_button", task: task %>

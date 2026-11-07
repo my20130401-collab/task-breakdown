@@ -62,6 +62,15 @@ RSpec.describe Task do
         task = build(:task, user: user, due_at: Time.current.beginning_of_minute)
         expect(task).to be_valid
       end
+
+      it "親タスクの期限を超える日時の場合は無効であること (AC-3)" do
+        # 親タスクの期限が3日後の場合、4日後は設定できずにエラーになる
+        parent_task = create(:task, user: user, due_at: 3.days.from_now)
+        task = build(:task, user: user, parent: parent_task, due_at: 4.days.from_now)
+
+        expect(task).not_to be_valid
+        expect(task.errors[:due_at]).to include("は親タスクの期限を超える日時を設定できません")
+      end
     end
 
     # ユーザーとの紐付けチェック（AC-4 / 認可の基盤）
@@ -74,6 +83,24 @@ RSpec.describe Task do
       end
     end
   end
+
+    # 親子タスクの所有者一致チェック（Issue #81）
+    describe "parent_id" do
+      let(:user) { create(:user) }
+      let(:user_b) { create(:user) }
+      let(:parent_task) { create(:task, user: user) }
+
+      it "親タスクと子タスクの所有者が一致する場合は有効であること" do
+        child_task = build(:task, user: user, parent: parent_task)
+        expect(child_task).to be_valid
+      end
+
+      it "親タスクと子タスクの所有者が一致しない場合は無効であること" do
+        child_task = build(:task, user: user_b, parent: parent_task)
+        expect(child_task).not_to be_valid
+        expect(child_task.errors[:parent_id]).to include("は同じユーザーのタスクを指定してください")
+      end
+    end
 
   # ----------------------------------------------------------------
   # 2. アソシエーション（関連付け）のテスト

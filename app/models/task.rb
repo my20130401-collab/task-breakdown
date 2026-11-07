@@ -10,6 +10,8 @@ class Task < ApplicationRecord
   belongs_to :user
   belongs_to :parent, class_name: "Task", optional: true
   has_many :children, class_name: "Task", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent
+  # 親タスクが削除されたら、紐づくAI分解の履歴もまとめて削除する（親タスク 1 : 多 分解履歴）
+  has_many :decompositions, dependent: :destroy
 
   # 列挙型（Enum）
   enum :kind, { basic: 0, special: 1 }
@@ -18,7 +20,9 @@ class Task < ApplicationRecord
 
   # バリデーション
   validates :title, presence: true, length: { maximum: 200 }
-  validate :due_at_cannot_be_in_the_past, on: :create
+  validate :due_at_cannot_be_in_the_past, if: -> { due_at.present? && will_save_change_to_due_at? }
+  validate :due_at_cannot_exceed_parent_due_at, if: -> { parent.present? && due_at.present? && will_save_change_to_due_at? }
+  validate :parent_must_belong_to_same_user, if: -> { parent_id.present? }
 
   # コールバック（サブタスク保存・削除後に親タスクの状態を同期）
   after_save :sync_parent_status, if: :parent_id?
@@ -30,6 +34,10 @@ class Task < ApplicationRecord
 
   # 期限の近い順（未設定は末尾）
   scope :ordered_by_due, -> { order(Arel.sql("due_at ASC NULLS LAST"), :id) }
+
+  # 日付タブ絞り込み用のスコープ（AC-3）
+  scope :due_today, -> { where(due_at: Time.zone.now.all_day) }
+  scope :due_tomorrow, -> { where(due_at: Time.zone.tomorrow.all_day) }
 
   # サブタスクの進捗（完了数/全体数）を返す（サブタスクがない場合は nil）
   def progress
@@ -51,12 +59,24 @@ class Task < ApplicationRecord
 
   private
 
-  # 期限は新規作成時に過去日時を指定不可（UC-1）
+  # 期限は過去日時を指定不可（UC-1, UC-4）
   def due_at_cannot_be_in_the_past
     return if due_at.blank?
+    return unless will_save_change_to_due_at?
 
     if due_at < Time.current.beginning_of_minute
       errors.add(:due_at, :cannot_be_in_the_past)
+    end
+  end
+
+  # 親タスクの期限を超える日時を設定不可（UC-4）
+  def due_at_cannot_exceed_parent_due_at
+    return if parent.blank? || parent.due_at.blank?
+    return if due_at.blank?
+    return unless will_save_change_to_due_at?
+
+    if due_at.to_i > parent.due_at.to_i
+      errors.add(:due_at, :cannot_exceed_parent_due_at)
     end
   end
 
@@ -71,6 +91,13 @@ class Task < ApplicationRecord
       parent.update!(status: :done, completed_at: Time.current) unless parent.done?
     else
       parent.update!(status: :todo, completed_at: nil) unless parent.todo?
+    end
+  end
+
+  # 親子タスクの所有者一致を検証
+  def parent_must_belong_to_same_user
+    if parent.present? && parent.user_id != user_id
+      errors.add(:parent_id, "は同じユーザーのタスクを指定してください")
     end
   end
 end
