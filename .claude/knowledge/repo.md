@@ -38,7 +38,11 @@
 - 遮断したリクエストは `page.driver.network_traffic` に残らない（`blocked?` で探せない）。遮断の確認は「該当 URL が 1 件も無い」で書く
 
 ## 横断検査（`spec/requests/pages_*_spec.rb`）
-- 巡回する URL は `spec/support/pages.rb` の `Pages::PATHS`。現在はログイン前の画面（`/session/new` `/registration/new` `/terms` `/privacy`）。**画面や状態を足したらここにも足す**（ログイン後の画面への拡張は #109）。`Pages` は request spec に include 済み
+- 巡回対象は `spec/support/pages.rb` に集約する（#109 で拡張）。**画面や状態を足したらここにも足す**。`Pages` は request spec に include 済み
+  - `Pages::PUBLIC_PATHS`: ログイン前の 4 画面（`/session/new` `/registration/new` `/terms` `/privacy`）。そのまま GET する
+  - `Pages::AUTHENTICATED_PAGES`: 巡回名 → 準備の種類。ログイン後の 8 画面（S-3、S-5 データあり／0 件、S-4 分解中／分解完了／分解失敗／全完了、S-8 編集）
+  - `Pages::ALL`: 両方を合わせた巡回一覧。検査はこれを回す
+  - ログイン後の画面は `get_page(name)` で開く: `reset!` → ユーザー作成 → ログイン → FactoryBot で状態（タスク・分解履歴・サブタスク）を用意 → GET。巡回ごとにセッションとデータを作り直すので、画面間で状態が漏れない
 - `pages_links_spec`: 全 `<a href>` / `<form action>` が `recognize_path` で解決できる（`#`・外部 URL 不可。`data-turbo-method` / hidden `_method` も見る。外部参照は `ALLOWED_EXTERNAL_HOSTS` の Web フォントだけ）。ログイン前レイアウト（`aside` 無し・ロゴは `/`）、S-1/S-2 の POST 先、規約リンクの `target=_blank rel=noopener` もここ
 - `pages_buttons_spec`: 全 `<button>` が「`type="submit"` かつ form 内」か「`data-action` あり」のどちらかで、`type` を明示。見た目だけのボタン（`data-mock="noop"`）は全画面で 0 件（`shared/_menu` の href 無し項目が出たら落ちる）。規約・ポリシーにはボタンが無いので、空集合の検査は巡回全体の `<button>` 件数 > 0 で行う
 - `pages_views_spec`: `<title>` が「〜 | Tasklet」、トークン外の色・文字サイズ（描画結果と `app/views` の両方）、id の画面内一意（`role="menu"` 含む）、メニューのトリガーと完了チェック（`data-subtask-card-target="check"`）の `aria-label` の一意、`contenteditable` が無い
